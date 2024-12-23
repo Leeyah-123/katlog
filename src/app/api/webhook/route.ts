@@ -15,11 +15,11 @@ export async function POST(request: NextRequest) {
   console.log('Data received in webhook', data);
 
   // Broadcast the new transaction data to all connected clients
-  clients.forEach((ws) => {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(data));
-    }
-  });
+  // clients.forEach((ws) => {
+  //   if (ws.readyState === WebSocket.OPEN) {
+  //     ws.send(JSON.stringify(data));
+  //   }
+  // });
 
   // Check if the transaction involves any watched accounts
   const allWatchlists = await getAllWatchlists();
