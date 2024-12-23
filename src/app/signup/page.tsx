@@ -1,20 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SignUpPage() {
+  const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    // Check if the user is already logged in
+    const checkAuth = async () => {
+      const res = await fetch('/api/user');
+      if (res.ok) {
+        // User is logged in, redirect to watchlist
+        router.push('/watchlist');
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     try {
       const response = await fetch('/api/signup', {
@@ -27,10 +39,16 @@ export default function SignUpPage() {
         router.push('/waitlist');
       } else {
         const data = await response.json();
-        setError(data.error);
+        toast.toast({
+          title: 'Signup unsuccessful',
+          description: data.error,
+        });
       }
     } catch {
-      setError('An unexpected error occurred');
+      toast.toast({
+        title: 'Signup unsuccessful',
+        description: 'An unexpected error occurred',
+      });
     }
   };
 
@@ -67,7 +85,6 @@ export default function SignUpPage() {
           Sign Up
         </Button>
       </form>
-      {error && <p className="mt-4 text-red-500">{error}</p>}
     </div>
   );
 }

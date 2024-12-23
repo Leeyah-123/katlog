@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { AccountAction } from '@/types';
 import Link from 'next/link';
+import { Loading } from 'notiflix';
 import { useEffect, useState } from 'react';
 
 interface AccountActionsProps {
@@ -21,6 +22,11 @@ interface AccountActionsProps {
 export default function AccountActions({ address }: AccountActionsProps) {
   const [actions, setActions] = useState<AccountAction[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (loading) return Loading.hourglass();
+    Loading.remove();
+  }, [loading]);
 
   useEffect(() => {
     const fetchActions = async () => {
@@ -65,10 +71,6 @@ export default function AccountActions({ address }: AccountActionsProps) {
       ws.close();
     };
   }, [address]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <Table>

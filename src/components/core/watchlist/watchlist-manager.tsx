@@ -11,11 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { WatchlistItem } from '@/types';
 import { Plus, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { Loading } from 'notiflix';
+import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 interface Transaction {
@@ -31,11 +33,11 @@ export default function WatchlistManager() {
   const [newAddress, setNewAddress] = useState('');
   const [newLabel, setNewLabel] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const router = useRouter();
+  const toast = useToast();
 
-  const fetchWatchlist = useCallback(async () => {
+  const fetchWatchlist = async () => {
     try {
       const response = await fetch('/api/watchlist');
       if (response.status === 401) {
@@ -47,10 +49,18 @@ export default function WatchlistManager() {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching watchlist:', error);
-      setError('Failed to fetch watchlist');
+      toast.toast({
+        title: 'Failed to fetch watchlist',
+        description: 'Unable to fetch watchlist. Please try again later.',
+      });
       setLoading(false);
     }
-  }, [router]);
+  };
+
+  useEffect(() => {
+    if (loading) return Loading.hourglass();
+    Loading.remove();
+  }, [loading]);
 
   useEffect(() => {
     fetchWatchlist();
@@ -67,7 +77,8 @@ export default function WatchlistManager() {
     return () => {
       ws.close();
     };
-  }, [fetchWatchlist]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const addToWatchlist = async () => {
     if (newAddress && newLabel) {
@@ -88,11 +99,19 @@ export default function WatchlistManager() {
           setNewLabel('');
           fetchWatchlist();
         } else {
-          setError('Failed to add to watchlist');
+          toast.toast({
+            title: 'Failed to add to watchlist',
+            description:
+              'Unable to add account to watchlist. Please try again later.',
+          });
         }
       } catch (error) {
         console.error('Error adding to watchlist:', error);
-        setError('Failed to add to watchlist');
+        toast.toast({
+          title: 'Failed to add to watchlist',
+          description:
+            'Unable to add account to watchlist. Please try again later.',
+        });
       }
     }
   };
@@ -113,21 +132,21 @@ export default function WatchlistManager() {
       if (response.ok) {
         fetchWatchlist();
       } else {
-        setError('Failed to remove from watchlist');
+        toast.toast({
+          title: 'Failed to remove from watchlist',
+          description:
+            'Unable to remove account from watchlist. Please try again later.',
+        });
       }
     } catch (error) {
       console.error('Error removing from watchlist:', error);
-      setError('Failed to remove from watchlist');
+      toast.toast({
+        title: 'Failed to remove from watchlist',
+        description:
+          'Unable to remove account from watchlist. Please try again later.',
+      });
     }
   };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
-  }
 
   return (
     <div>
