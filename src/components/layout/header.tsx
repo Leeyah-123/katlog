@@ -18,9 +18,7 @@ export default async function Header() {
     <header className={cn('py-4 px-4 glassmorphism')}>
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="text-2xl font-bold">
-          <span className={cn('drop-shadow-[0_1px_3px_rgba(255,255,255,0.7)]')}>
-            Katlog
-          </span>
+          Katlog
         </Link>
         <nav className="space-x-4 flex items-center">
           <Link

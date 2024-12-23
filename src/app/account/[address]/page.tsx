@@ -13,7 +13,7 @@ export async function generateMetadata({
   const address = (await params).address;
 
   return {
-    title: `Account ${truncateAddress(address)} | Solana DApp Explorer`,
+    title: `Account ${truncateAddress(address)} | Katlog`,
     description: `View activities for Solana account ${truncateAddress(
       address
     )}`,

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { WatchlistItem } from '@/types';
+import { Plus, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -141,7 +142,7 @@ export default function WatchlistManager() {
             value={newAddress}
             onChange={(e) => setNewAddress(e.target.value)}
             className={cn(
-              'glassmorphism text-high-contrast-text placeholder-high-contrast-text/70 border-white/20'
+              'glassmorphism text-white !placeholder-white/70 border-white/20'
             )}
           />
           <Input
@@ -150,16 +151,11 @@ export default function WatchlistManager() {
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             className={cn(
-              'glassmorphism text-high-contrast-text placeholder-high-contrast-text/70 border-white/20'
+              'glassmorphism text-white !placeholder-white/70 border-white/20'
             )}
           />
-          <Button
-            onClick={addToWatchlist}
-            className={cn(
-              'bg-gradient-to-r from-solana-green to-solana-purple text-high-contrast-text font-semibold hover:opacity-90 transition-opacity'
-            )}
-          >
-            Add
+          <Button size="icon" onClick={addToWatchlist} className={cn('w-32')}>
+            <Plus className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -167,94 +163,109 @@ export default function WatchlistManager() {
       <h2 className="text-xl font-semibold mb-2 text-high-contrast-text">
         Your Watchlist
       </h2>
-      <Table>
-        <TableHeader>
-          <TableRow className={cn('border-b border-white/20')}>
-            <TableHead className="text-high-contrast-text font-semibold">
-              Label
-            </TableHead>
-            <TableHead className="text-high-contrast-text font-semibold">
-              Address
-            </TableHead>
-            <TableHead className="text-high-contrast-text font-semibold">
-              Actions
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {watchlist.map((item) => (
-            <TableRow
-              key={item.address}
-              className={cn(
-                'border-b border-white/20 hover:bg-white/10 transition-colors'
-              )}
-            >
-              <TableCell className="text-high-contrast-text">
-                {item.label}
-              </TableCell>
-              <TableCell className="text-high-contrast-text">
-                <Account address={item.address} />
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="destructive"
-                  onClick={() => removeFromWatchlist(item.address)}
-                  className={cn(
-                    'bg-red-500 hover:bg-red-600 transition-colors text-high-contrast-text'
-                  )}
-                >
-                  Remove
-                </Button>
-              </TableCell>
+      {watchlist.length > 0 ? (
+        <Table>
+          <TableHeader>
+            <TableRow className={cn('border-b border-white/20')}>
+              <TableHead className="text-high-contrast-text font-semibold">
+                Label
+              </TableHead>
+              <TableHead className="text-high-contrast-text font-semibold">
+                Address
+              </TableHead>
+              <TableHead className="text-high-contrast-text font-semibold">
+                Actions
+              </TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {watchlist.map((item) => (
+              <TableRow
+                key={item.address}
+                className={cn(
+                  'border-b border-white/20 hover:bg-white/10 transition-colors'
+                )}
+              >
+                <TableCell className="text-high-contrast-text">
+                  {item.label}
+                </TableCell>
+                <TableCell className="text-high-contrast-text">
+                  <Account address={item.address} />
+                </TableCell>
+                <TableCell>
+                  <Button
+                    size="icon"
+                    // variant="outline"
+                    onClick={() => removeFromWatchlist(item.address)}
+                    className={cn(
+                      'bg-red-500 hover:bg-red-600 transition-colors text-high-contrast-text'
+                    )}
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <p className="w-full text-center p-3">No account in watchlist</p>
+      )}
 
       <h2 className="text-xl font-semibold my-4 text-high-contrast-text">
         Recent Transactions
       </h2>
-      <Table>
-        <TableHeader>
-          <TableRow className={cn('border-b border-white/20')}>
-            <TableHead className="text-high-contrast-text font-semibold">
-              From
-            </TableHead>
-            <TableHead className="text-high-contrast-text font-semibold">
-              To
-            </TableHead>
-            <TableHead className="text-high-contrast-text font-semibold">
-              Action
-            </TableHead>
-            <TableHead className="text-high-contrast-text font-semibold">
-              Timestamp
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {transactions.map((tx) => (
-            <TableRow
-              key={tx.signature}
-              className={cn(
-                'border-b border-white/20 hover:bg-white/10 transition-colors'
-              )}
-            >
-              <TableCell className="text-high-contrast-text">
-                <Account address={tx.from} />
-              </TableCell>
-              <TableCell className="text-high-contrast-text">
-                <Account address={tx.to} />
-              </TableCell>
-              <TableCell className="text-high-contrast-text">
-                {tx.action}
-              </TableCell>
-              <TableCell className="text-high-contrast-text">
-                {new Date(tx.timestamp).toLocaleString()}
-              </TableCell>
+      {transactions.length > 0 ? (
+        <Table>
+          <TableHeader>
+            <TableRow className={cn('border-b border-white/20')}>
+              <TableHead className="text-high-contrast-text font-semibold">
+                Signature
+              </TableHead>
+              <TableHead className="text-high-contrast-text font-semibold">
+                From
+              </TableHead>
+              <TableHead className="text-high-contrast-text font-semibold">
+                To
+              </TableHead>
+              <TableHead className="text-high-contrast-text font-semibold">
+                Action
+              </TableHead>
+              <TableHead className="text-high-contrast-text font-semibold">
+                Timestamp
+              </TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {transactions.map((tx) => (
+              <TableRow
+                key={tx.signature}
+                className={cn(
+                  'border-b border-white/20 hover:bg-white/10 transition-colors'
+                )}
+              >
+                <TableCell className="text-high-contrast-text">
+                  {tx.signature.slice(0, 6)}...
+                </TableCell>
+                <TableCell className="text-high-contrast-text">
+                  <Account address={tx.from} />
+                </TableCell>
+                <TableCell className="text-high-contrast-text">
+                  <Account address={tx.to} />
+                </TableCell>
+                <TableCell className="text-high-contrast-text">
+                  {tx.action}
+                </TableCell>
+                <TableCell className="text-high-contrast-text">
+                  {new Date(tx.timestamp).toLocaleString()}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <p className="w-full text-center p-3">No transaction to be displayed</p>
+      )}
     </div>
   );
 }

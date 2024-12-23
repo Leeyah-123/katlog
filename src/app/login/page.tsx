@@ -24,7 +24,7 @@ export default function LoginPage() {
       });
 
       if (response.ok) {
-        router.push('/');
+        router.push('/waitlist');
       } else {
         const data = await response.json();
         setError(data.error);

@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Home | Solana DApp Explorer',
+  title: 'Home | Katlog',
   description: 'Manage your Solana account watchlist',
 };
 

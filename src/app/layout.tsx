@@ -7,8 +7,8 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'Solana DApp Explorer',
-  description: 'Explore Solana account activities and manage your watchlist',
+  title: 'Katlog',
+  description: 'Monitor account actions on Solana.',
 };
 
 export default function RootLayout({
@@ -26,7 +26,7 @@ export default function RootLayout({
             {children}
           </main>
           <footer className="py-4 text-center text-sm text-high-contrast-text/80">
-            © 2023 Solana DApp Explorer. All rights reserved.
+            © 2024 Katlog. All rights reserved.
           </footer>
         </div>
         {/* </ThemeProvider> */}
