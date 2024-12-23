@@ -12,6 +12,7 @@ const clients = new Map<string, WebSocket>();
 
 export async function POST(request: NextRequest) {
   const data = await request.json();
+  console.log('Data received in webhook', data);
 
   // Broadcast the new transaction data to all connected clients
   clients.forEach((ws) => {
