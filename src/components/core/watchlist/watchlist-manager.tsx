@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, truncateAddress } from '@/lib/utils';
 import { WatchlistItem } from '@/types';
 import { Plus, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -70,6 +70,7 @@ export default function WatchlistManager() {
     );
 
     ws.onmessage = (event) => {
+      console.log('NEW WEBSOCKET MESSAGE', event);
       const newTransaction = JSON.parse(event.data);
       setTransactions((prev) => [newTransaction, ...prev].slice(0, 10)); // Keep only the 10 most recent transactions
     };
@@ -264,7 +265,7 @@ export default function WatchlistManager() {
                 )}
               >
                 <TableCell className="text-high-contrast-text">
-                  {tx.signature.slice(0, 6)}...
+                  {truncateAddress(tx.signature)}
                 </TableCell>
                 <TableCell className="text-high-contrast-text">
                   <Account address={tx.from} />
