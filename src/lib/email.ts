@@ -1,14 +1,8 @@
-import nodemailer from 'nodemailer';
+import User from '@/models/User';
+import { SeaMailerClient } from 'seamailer-nodejs';
+import dbConnect from './mongodb';
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: parseInt(process.env.EMAIL_PORT || '587'),
-  secure: process.env.EMAIL_SECURE === 'true',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const SeaMailer = new SeaMailerClient(process.env.SEAMAILER_API_KEY!);
 
 interface Transaction {
   signature: string;
@@ -19,14 +13,22 @@ interface Transaction {
 }
 
 export async function sendEmail(userId: string, transaction: Transaction) {
-  // In a real application, you would fetch the user's email address from your database
-  const userEmail = `${userId}@example.com`;
+  await dbConnect();
 
-  const mailOptions = {
-    from: process.env.EMAIL_FROM,
-    to: userEmail,
-    subject: 'Watchlist Account Transaction Alert',
-    html: `
+  const user = await User.findOne({ id: userId });
+  try {
+    await SeaMailer.sendMail({
+      from: {
+        email: process.env.EMAIL_FROM!,
+        name: 'Katlog',
+      },
+      to: [
+        {
+          email: user.email,
+        },
+      ],
+      subject: 'Watchlist Account Transaction Alert',
+      htmlPart: `
       <h1>Transaction Alert</h1>
       <p>A transaction involving an account on your watchlist has occurred:</p>
       <ul>
@@ -37,11 +39,8 @@ export async function sendEmail(userId: string, transaction: Transaction) {
         <li>Signature: ${transaction.signature}</li>
       </ul>
     `,
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Email sent to ${userEmail}`);
+    });
+    console.log(`Email sent to ${user.email}`);
   } catch (error) {
     console.error('Error sending email:', error);
   }
