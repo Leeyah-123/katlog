@@ -36,7 +36,7 @@ export default function LoginPage() {
       });
 
       if (response.ok) {
-        router.push('/waitlist');
+        router.push('/watchlist');
       } else {
         const data = await response.json();
         toast.toast({

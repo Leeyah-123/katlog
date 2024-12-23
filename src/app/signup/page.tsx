@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function SignUpPage() {
   const toast = useToast();
@@ -36,7 +36,7 @@ export default function SignUpPage() {
       });
 
       if (response.ok) {
-        router.push('/waitlist');
+        router.push('/watchlist');
       } else {
         const data = await response.json();
         toast.toast({
