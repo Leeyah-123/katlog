@@ -115,7 +115,7 @@ export async function GET(request: Request | NextRequest) {
     handleUpgrade(request);
   }
 
-  return new NextResponse(null, {
+  return new Response(null, {
     status: 101,
     headers: {
       'Content-Type': 'text/plain',
