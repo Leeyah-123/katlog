@@ -27,7 +27,7 @@ export function setTokenCookie(res: NextResponse, token: string) {
     httpOnly: true,
     secure: process.env.NODE_ENV !== 'development',
     sameSite: 'strict',
-    maxAge: 86400,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
     path: '/',
   });
   res.headers.append('Set-Cookie', cookie);
