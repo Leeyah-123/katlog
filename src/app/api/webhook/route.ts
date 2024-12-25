@@ -42,7 +42,7 @@ const handleUpgrade = (request: IncomingMessage) => {
   });
 };
 
-export async function GET(request: Request | NextRequest) {
+export async function GET(request: Request | NextRequest, res: NextResponse) {
   const { href, searchParams } = new URL(request.url);
   const clientId = searchParams.get('clientId');
 
@@ -115,7 +115,14 @@ export async function GET(request: Request | NextRequest) {
     handleUpgrade(request);
   }
 
-  return new Response('WebSocket connection established');
+  return new NextResponse(null, {
+    status: 101,
+    headers: {
+      'Content-Type': 'text/plain',
+      Connection: 'Upgrade',
+      Upgrade: 'websocket',
+    },
+  });
 }
 
 // Websocket route configuration
