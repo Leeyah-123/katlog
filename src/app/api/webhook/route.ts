@@ -42,7 +42,7 @@ const handleUpgrade = (request: IncomingMessage) => {
   });
 };
 
-export async function GET(request: Request | NextRequest, res: NextResponse) {
+export async function GET(request: Request | NextRequest) {
   const { href, searchParams } = new URL(request.url);
   const clientId = searchParams.get('clientId');
 
