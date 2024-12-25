@@ -25,7 +25,7 @@ export function generateToken(userId: string) {
 export function setTokenCookie(res: NextResponse, token: string) {
   const cookie = serialize('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV !== 'development',
+    secure: process.env.APP_ENV !== 'development',
     sameSite: 'strict',
     maxAge: 30 * 24 * 60 * 60, // 30 days
     path: '/',

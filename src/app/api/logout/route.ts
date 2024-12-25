@@ -7,7 +7,7 @@ export async function POST() {
     'Set-Cookie',
     serialize('token', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV !== 'development',
+      secure: process.env.APP_ENV !== 'development',
       expires: new Date(0),
       sameSite: 'strict',
       path: '/',
