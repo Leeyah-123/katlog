@@ -49,6 +49,17 @@ export async function GET(request: NextRequest) {
   // Initialize WebSocket server if it doesn't exist
   if (!wss) {
     wss = new WebSocketServer({ port: Number(process.env.WS_PORT) || 3001 });
+    console.log(
+      `WebSocket server started on port ${process.env.WS_PORT || 3001}`
+    );
+
+    wss.on('listening', () => {
+      console.log('WebSocket server is listening');
+    });
+
+    wss.on('error', (error) => {
+      console.error('WebSocket server error:', error);
+    });
 
     wss.on('connection', (ws: WebSocket) => {
       ws.on('message', (message) => {

@@ -69,10 +69,26 @@ export default function WatchlistManager() {
       `${window.location.origin}/api/webhook?clientId=${clientId}`
     );
 
+    ws.onopen = () => {
+      console.log('Connected to WebSocket server');
+    };
+
     ws.onmessage = (event) => {
       console.log('NEW WEBSOCKET MESSAGE', event);
       const newTransaction = JSON.parse(event.data);
       setTransactions((prev) => [newTransaction, ...prev].slice(0, 10)); // Keep only the 10 most recent transactions
+    };
+
+    ws.onclose = (event) => {
+      console.log('WebSocket closed:', {
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean,
+      });
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
     };
 
     return () => {
