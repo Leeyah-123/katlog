@@ -114,6 +114,8 @@ export async function GET(request: Request | NextRequest) {
   if (request instanceof IncomingMessage) {
     handleUpgrade(request);
   }
+
+  return new Response('WebSocket connection established');
 }
 
 // Websocket route configuration
