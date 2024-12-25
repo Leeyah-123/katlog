@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     clients.set(
       clientId,
       new WebSocket(
-        `ws://localhost:${process.env.WS_PORT}/?clientId=${clientId}`
+        `ws://localhost:${process.env.WS_PORT || 3001}/?clientId=${clientId}`
       )
     );
 
