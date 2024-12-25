@@ -1,5 +1,6 @@
 import { sendEmail } from '@/lib/email';
 import { getAllWatchlists } from '@/lib/watchlist';
+import { IncomingMessage } from 'http';
 import { NextRequest, NextResponse } from 'next/server';
 import { WebSocket, WebSocketServer } from 'ws';
 
@@ -35,8 +36,14 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ success: true });
 }
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+const handleUpgrade = (request: IncomingMessage) => {
+  wss!.handleUpgrade(request, request.socket, Buffer.alloc(0), (ws) => {
+    wss!.emit('connection', ws, request);
+  });
+};
+
+export async function GET(request: Request | NextRequest) {
+  const { href, searchParams } = new URL(request.url);
   const clientId = searchParams.get('clientId');
 
   if (!clientId) {
@@ -69,6 +76,12 @@ export async function GET(request: NextRequest) {
     });
 
     wss.on('connection', (ws: WebSocket) => {
+      const interval = setInterval(() => {
+        if (ws.readyState === ws.OPEN) {
+          ws.ping();
+        }
+      }, 30000);
+
       ws.on('message', (message) => {
         console.log('Received:', message.toString());
 
@@ -85,30 +98,24 @@ export async function GET(request: NextRequest) {
             clients.delete(key);
           }
         });
+        clearInterval(interval);
       });
     });
   }
 
   if (wss) {
-    clients.set(
-      clientId,
-      new WebSocket(
-        `ws://localhost:${process.env.WS_PORT || 3001}/?clientId=${clientId}`
-      )
-    );
+    clients.set(clientId, new WebSocket(href));
 
     wss.on('connection', (ws: WebSocket) => {
       clients.set(clientId, ws);
     });
   }
 
-  // Return a success response instead of a WebSocket upgrade
-  return new Response(JSON.stringify({ message: 'WebSocket server ready' }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  if (request instanceof IncomingMessage) {
+    handleUpgrade(request);
+  }
 }
 
-// Make sure the route is configured for WebSocket
+// Websocket route configuration
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
