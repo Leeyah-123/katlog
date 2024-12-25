@@ -1,11 +1,9 @@
 import { sendEmail } from '@/lib/email';
 import { getAllWatchlists } from '@/lib/watchlist';
 import { NextRequest, NextResponse } from 'next/server';
-import { WebSocket } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 
-// let wss: WebSocket.Server;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let wss: any;
+let wss: WebSocketServer | null = null;
 
 // This map will store WebSocket connections for each client
 const clients = new Map<string, WebSocket>();
@@ -42,38 +40,62 @@ export async function GET(request: NextRequest) {
   const clientId = searchParams.get('clientId');
 
   if (!clientId) {
-    return NextResponse.json(
-      { error: 'Client ID is required' },
-      { status: 400 }
-    );
+    return new Response(JSON.stringify({ error: 'Client ID is required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
+  // Initialize WebSocket server if it doesn't exist
   if (!wss) {
-    wss = new WebSocket.Server({ noServer: true });
+    wss = new WebSocketServer({ port: Number(process.env.WS_PORT) || 3001 });
+
+    wss.on('connection', (ws: WebSocket) => {
+      // Handle incoming messages
+      ws.on('message', (message) => {
+        console.log('Received:', message.toString());
+
+        // Optional: Broadcast to all clients
+        clients.forEach((clientWs) => {
+          if (clientWs.readyState === WebSocket.OPEN) {
+            clientWs.send(message.toString());
+          }
+        });
+      });
+
+      // Handle client disconnection
+      ws.on('close', () => {
+        // Find and remove the disconnected client
+        clients.forEach((value, key) => {
+          if (value === ws) {
+            clients.delete(key);
+          }
+        });
+      });
+    });
   }
 
-  const ws = await new Promise<WebSocket>((resolve) => {
-    wss.handleUpgrade(
-      request,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (request as any).socket,
-      Buffer.alloc(0),
-      (ws: WebSocket) => {
-        resolve(ws);
-      }
+  // Add the new client to our map
+  if (wss) {
+    clients.set(
+      clientId,
+      new WebSocket(`ws://localhost:3001?clientId=${clientId}`)
     );
-  });
 
-  clients.set(clientId, ws);
-
-  ws.on('close', () => {
-    clients.delete(clientId);
-  });
+    wss.on('connection', (ws: WebSocket) => {
+      clients.set(clientId, ws);
+    });
+  }
 
   return new Response(null, {
     status: 101,
     headers: {
       Upgrade: 'websocket',
+      Connection: 'Upgrade',
     },
   });
 }
+
+// Make sure the route is configured for WebSocket
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
