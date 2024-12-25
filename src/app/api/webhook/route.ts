@@ -51,11 +51,9 @@ export async function GET(request: NextRequest) {
     wss = new WebSocketServer({ port: Number(process.env.WS_PORT) || 3001 });
 
     wss.on('connection', (ws: WebSocket) => {
-      // Handle incoming messages
       ws.on('message', (message) => {
         console.log('Received:', message.toString());
 
-        // Optional: Broadcast to all clients
         clients.forEach((clientWs) => {
           if (clientWs.readyState === WebSocket.OPEN) {
             clientWs.send(message.toString());
@@ -63,9 +61,7 @@ export async function GET(request: NextRequest) {
         });
       });
 
-      // Handle client disconnection
       ws.on('close', () => {
-        // Find and remove the disconnected client
         clients.forEach((value, key) => {
           if (value === ws) {
             clients.delete(key);
@@ -75,24 +71,18 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Add the new client to our map
   if (wss) {
-    clients.set(
-      clientId,
-      new WebSocket(`ws://localhost:3001?clientId=${clientId}`)
-    );
+    clients.set(clientId, null);
 
     wss.on('connection', (ws: WebSocket) => {
       clients.set(clientId, ws);
     });
   }
 
-  return new Response(null, {
-    status: 101,
-    headers: {
-      Upgrade: 'websocket',
-      Connection: 'Upgrade',
-    },
+  // Return a success response instead of a WebSocket upgrade
+  return new Response(JSON.stringify({ message: 'WebSocket server ready' }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
