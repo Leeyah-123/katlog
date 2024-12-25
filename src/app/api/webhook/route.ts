@@ -72,7 +72,12 @@ export async function GET(request: NextRequest) {
   }
 
   if (wss) {
-    clients.set(clientId, null);
+    clients.set(
+      clientId,
+      new WebSocket(
+        `ws://localhost:${process.env.WS_PORT}/?clientId=${clientId}`
+      )
+    );
 
     wss.on('connection', (ws: WebSocket) => {
       clients.set(clientId, ws);
