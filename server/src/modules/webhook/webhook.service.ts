@@ -45,6 +45,7 @@ export class WebhookService {
   private handleConnection(ws: WebSocket, clientId: string): void {
     logger.info(`Client connected: ${clientId}`);
     this.clients.set(clientId, ws);
+    console.log('HANDLE CONNECTION', this.clients);
 
     const pingInterval = this.setupPingInterval(ws);
 
