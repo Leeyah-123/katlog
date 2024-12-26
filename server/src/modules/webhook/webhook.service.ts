@@ -4,7 +4,7 @@ import logger from '../../utils/logger';
 
 export class WebhookService {
   private wss: WebSocketServer | null = null;
-  private clients: Map<string, WebSocket> = new Map();
+  private static clients: Map<string, WebSocket> = new Map();
 
   initialize(server: Server): void {
     if (this.wss) return;
@@ -44,8 +44,7 @@ export class WebhookService {
 
   private handleConnection(ws: WebSocket, clientId: string): void {
     logger.info(`Client connected: ${clientId}`);
-    this.clients.set(clientId, ws);
-    console.log('HANDLE CONNECTION', Array.from(this.clients.keys()));
+    WebhookService.clients.set(clientId, ws);
 
     const pingInterval = this.setupPingInterval(ws);
 
@@ -81,18 +80,18 @@ export class WebhookService {
   }
 
   private handleClose(ws: WebSocket): void {
-    this.clients.forEach((value, key) => {
+    WebhookService.clients.forEach((value, key) => {
       if (value === ws) {
-        this.clients.delete(key);
+        WebhookService.clients.delete(key);
       }
     });
   }
 
   broadcast(data: any): void {
     // Obtain all client keys
-    console.log('Broadcast: Keys', Array.from(this.clients.keys()));
+    console.log('Broadcast: Keys', Array.from(WebhookService.clients.keys()));
 
-    this.clients.forEach((ws) => {
+    WebhookService.clients.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
         logger.info('Broadcasting message:', data);
         ws.send(
