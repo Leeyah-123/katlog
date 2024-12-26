@@ -45,7 +45,7 @@ export class WebhookService {
   private handleConnection(ws: WebSocket, clientId: string): void {
     logger.info(`Client connected: ${clientId}`);
     this.clients.set(clientId, ws);
-    console.log('HANDLE CONNECTION', this.clients);
+    console.log('HANDLE CONNECTION', this.clients.keys);
 
     const pingInterval = this.setupPingInterval(ws);
 
@@ -89,7 +89,7 @@ export class WebhookService {
   }
 
   broadcast(data: any): void {
-    console.log('Clients', this.clients);
+    console.log('Broadcast: Clients', this.clients.keys);
 
     this.clients.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
