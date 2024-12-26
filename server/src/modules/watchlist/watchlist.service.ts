@@ -22,6 +22,7 @@ export class WatchlistService {
 
     for (const watchlist of watchlists) {
       const watchedAddresses = watchlist.items.map((item) => item.address);
+      console.log('WATCHED ADDRESSES', watchedAddresses);
       if (
         watchedAddresses.includes(transaction.from) ||
         watchedAddresses.includes(transaction.to)

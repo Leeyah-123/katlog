@@ -49,7 +49,8 @@ export class WebhookController {
         transaction,
         req.token!!
       );
-      console.log('Received transaction, notifyUserIds:', notifyUserIds);
+      if (notifyUserIds.length > 0)
+        console.log('Received transaction, notifyUserIds:', notifyUserIds);
 
       // Send email notifications
       await Promise.all(
