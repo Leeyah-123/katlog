@@ -90,6 +90,7 @@ export class WebhookService {
   broadcast(data: any): void {
     this.clients.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
+        logger.info('Broadcasting message:', data);
         ws.send(
           JSON.stringify({
             type: 'transaction',

@@ -40,7 +40,6 @@ export class WebhookController {
   async handleTransaction(req: Request, res: Response): Promise<void> {
     try {
       const transaction: AccountAction = req.body.data;
-      logger.info('Received transaction:', transaction);
 
       // Broadcast to WebSocket clients
       this.wsService.broadcast(transaction);
@@ -50,6 +49,7 @@ export class WebhookController {
         transaction,
         req.token!!
       );
+      console.log('Received transaction, notifyUserIds:', notifyUserIds);
 
       // Send email notifications
       await Promise.all(
