@@ -88,6 +88,8 @@ export class WebhookService {
   }
 
   broadcast(data: any): void {
+    console.log('Clients', this.clients);
+
     this.clients.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
         logger.info('Broadcasting message:', data);
