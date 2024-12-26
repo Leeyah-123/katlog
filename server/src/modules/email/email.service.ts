@@ -2,14 +2,7 @@ import { SeaMailerClient } from 'seamailer-nodejs';
 import { AppError } from '../../middlewares';
 import logger from '../../utils/logger';
 import { config } from '../../config';
-
-interface Transaction {
-  signature: string;
-  from: string;
-  to: string;
-  action: string;
-  timestamp: number;
-}
+import { AccountAction } from '../../core/types';
 
 export class EmailService {
   private readonly seamailer: SeaMailerClient;
@@ -21,7 +14,7 @@ export class EmailService {
   async sendNotification(
     userId: string,
     email: string,
-    transaction: Transaction
+    transaction: AccountAction
   ) {
     try {
       await this.seamailer.sendMail({

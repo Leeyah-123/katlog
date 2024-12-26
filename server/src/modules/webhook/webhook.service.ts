@@ -88,12 +88,8 @@ export class WebhookService {
   }
 
   broadcast(data: any): void {
-    // Obtain all client keys
-    console.log('Broadcast: Keys', Array.from(WebhookService.clients.keys()));
-
     WebhookService.clients.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
-        logger.info('Broadcasting message:', data);
         ws.send(
           JSON.stringify({
             type: 'transaction',
