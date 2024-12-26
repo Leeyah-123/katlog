@@ -3,7 +3,6 @@ import { AccountAction, Watchlist } from '../../core/types';
 
 export class WatchlistService {
   async getAllWatchlists(token: string): Promise<Watchlist[]> {
-    console.log('FETCHING WATCHLISTS');
     // Fetch all watchlists from main server
     const response = await fetch(`${config.mainServerUrl}/api/watchlists`, {
       headers: {
