@@ -1,10 +1,6 @@
+import { WatchlistItem } from '@/types';
 import Watchlist, { WatchlistType } from '../models/Watchlist';
 import dbConnect from './mongodb';
-
-export interface WatchlistItem {
-  address: string;
-  label: string;
-}
 
 export async function getAllWatchlists(): Promise<WatchlistType[]> {
   await dbConnect();

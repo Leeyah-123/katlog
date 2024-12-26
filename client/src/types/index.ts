@@ -1,13 +1,10 @@
 export interface AccountAction {
   signature: string;
-  slot: number;
+  from: string;
+  to: string;
+  amount?: number;
+  action: 'Token Transfer' | 'Sol Transfer' | 'Other';
   timestamp: string;
-  programId: string;
-  voteAccount: string;
-  voteAuthority: string;
-  preBalance: number;
-  postBalance: number;
-  balanceChange: number;
   success: boolean;
 }
 

@@ -1,18 +1,11 @@
 import User from '@/models/User';
+import { AccountAction } from '@/types';
 import { SeaMailerClient } from 'seamailer-nodejs';
 import dbConnect from './mongodb';
 
 const SeaMailer = new SeaMailerClient(process.env.SEAMAILER_API_KEY!);
 
-interface Transaction {
-  signature: string;
-  from: string;
-  to: string;
-  action: string;
-  timestamp: number;
-}
-
-export async function sendEmail(userId: string, transaction: Transaction) {
+export async function sendEmail(userId: string, transaction: AccountAction) {
   await dbConnect();
 
   const user = await User.findOne({ id: userId });

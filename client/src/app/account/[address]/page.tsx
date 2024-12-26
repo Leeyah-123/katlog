@@ -32,13 +32,6 @@ export default async function AccountPage({ params }: AccountPageProps) {
         </span>
       </h1>
       <AccountActions address={address} />
-      {/* {actions.length > 0 ? (
-        <AccountActions address={params.address} actions={actions} />
-      ) : (
-        <p className="text-high-contrast-text">
-          No actions found for this account.
-        </p>
-      )} */}
     </div>
   );
 }
