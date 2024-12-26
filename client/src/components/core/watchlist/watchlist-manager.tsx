@@ -39,7 +39,7 @@ export default function WatchlistManager() {
 
   const fetchWatchlist = async () => {
     try {
-      const response = await fetch('/api/watchlist');
+      const response = await fetch('/api/watchlists/user');
       if (response.status === 401) {
         router.push('/login');
         return;
@@ -66,7 +66,7 @@ export default function WatchlistManager() {
     fetchWatchlist();
     const clientId = uuidv4();
     const ws = new WebSocket(
-      `${window.location.origin}/api/webhook?clientId=${clientId}`
+      `${process.env.NEXT_PUBLIC_WEBHOOK_SERVER_URL}/api/webhook?clientId=${clientId}`
     );
 
     ws.onopen = () => {
@@ -74,9 +74,11 @@ export default function WatchlistManager() {
     };
 
     ws.onmessage = (event) => {
-      console.log('NEW WEBSOCKET MESSAGE', event);
-      const newTransaction = JSON.parse(event.data);
-      setTransactions((prev) => [newTransaction, ...prev].slice(0, 10)); // Keep only the 10 most recent transactions
+      const message = JSON.parse(event.data);
+      if (message.type === 'transaction') {
+        const newTransaction = message.data as Transaction;
+        setTransactions((prev) => [newTransaction, ...prev].slice(0, 10)); // Keep only the 10 most recent transactions
+      }
     };
 
     ws.onclose = (event) => {
@@ -100,7 +102,7 @@ export default function WatchlistManager() {
   const addToWatchlist = async () => {
     if (newAddress && newLabel) {
       try {
-        const response = await fetch('/api/watchlist', {
+        const response = await fetch('/api/watchlists', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -135,7 +137,7 @@ export default function WatchlistManager() {
 
   const removeFromWatchlist = async (address: string) => {
     try {
-      const response = await fetch('/api/watchlist', {
+      const response = await fetch('/api/watchlists', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
