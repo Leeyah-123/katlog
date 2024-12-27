@@ -94,6 +94,7 @@ export class EmailService {
         .detail-value {
           color: #334155;
           font-weight: 600;
+          margin-left: 3px;
         }
         .highlight {
           color: #4f46e5;
@@ -110,31 +111,31 @@ export class EmailService {
         
         <div class="transaction-details">
           <div class="detail-row">
-            <span class="detail-label">Signature: </span>
+            <span class="detail-label">Signature:</span>
             <span class="detail-value">${transaction.signature}</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">From: </span>
+            <span class="detail-label">From:</span>
             <span class="detail-value">${transaction.from}${
     transaction.from === account ? ` (${accountLabel})` : ''
   }</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">To: </span>
+            <span class="detail-label">To:</span>
             <span class="detail-value">${transaction.to}${
     transaction.to === account ? ` (${accountLabel})` : ''
   }</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Amount: </span>
-            <span class="detail-value">${transaction.amount}</span>
+            <span class="detail-label">Amount:</span>
+            <span class="detail-value">${transaction.amount} SOL</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Action: </span>
+            <span class="detail-label">Action:</span>
             <span class="detail-value">${transaction.action}</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Timestamp: </span>
+            <span class="detail-label">Timestamp:</span>
             <span class="detail-value">${transaction.timestamp}</span>
           </div>
         </div>
