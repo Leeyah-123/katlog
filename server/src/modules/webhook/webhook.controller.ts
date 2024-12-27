@@ -46,17 +46,22 @@ export class WebhookController {
 
       for (const transaction of transactions) {
         // Check watchlists and send notifications
-        const notifyUserIds = await this.watchlistService.checkWatchedAddresses(
+        const notifyUsers = await this.watchlistService.checkWatchedAddresses(
           transaction
         );
 
         // Send email notifications
         await Promise.all(
-          notifyUserIds.map(async (userId) => {
+          notifyUsers.map(async ({ userId, account, accountLabel }) => {
             // Fetch user email from main server
             const user = await this.userService.getUserById(userId);
 
-            return this.emailService.sendNotification(user.email, transaction);
+            return this.emailService.sendNotification({
+              email: user.email,
+              account,
+              accountLabel,
+              transaction,
+            });
           })
         );
       }

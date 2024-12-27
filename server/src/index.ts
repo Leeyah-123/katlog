@@ -23,9 +23,28 @@ const wsService = new WebhookService();
 wsService.initialize(server);
 
 // Routes
+app.use('/health', (_, res) => res.send('OK'));
 app.use('/api', webhookRoutes);
 
-// Error Handling
+// Handle uncaught exceptions
+process.on('uncaughtException', (error: Error) => {
+  logger.error('Uncaught Exception:', error);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason: any) => {
+  logger.error('Unhandled Rejection:', reason);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received. Performing graceful shutdown...');
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
+});
+
 app.use(errorHandler);
 
 const port = config.port;

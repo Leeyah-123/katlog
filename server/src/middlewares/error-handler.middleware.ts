@@ -22,10 +22,23 @@ export const errorHandler = (
     method: req.method,
   });
 
+  // Ensure headers haven't been sent
+  if (res.headersSent) {
+    return next(err);
+  }
+
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       status: 'error',
       message: err.message,
+    });
+  }
+
+  // Handle async errors
+  if (err instanceof SyntaxError) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Invalid JSON',
     });
   }
 
