@@ -9,7 +9,9 @@ export interface AccountAction {
 }
 
 export interface WatchlistItem {
+  _id: string;
   address: string;
   label: string;
+  emailNotifications: boolean;
   actions: AccountAction[];
 }

@@ -30,38 +30,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { address, label } = await request.json();
+  const { address, label, emailNotifications } = await request.json();
 
   await dbConnect();
 
   await Watchlist.findOneAndUpdate(
     { userId: user._id },
-    { $push: { items: { address, label } } },
+    { $push: { items: { address, label, emailNotifications } } },
     { upsert: true, new: true }
-  );
-
-  return NextResponse.json({ success: true });
-}
-
-export async function DELETE(request: Request) {
-  const token = await extractToken(request);
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const user = await authenticateUser(token);
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { address } = await request.json();
-
-  await dbConnect();
-
-  await Watchlist.findOneAndUpdate(
-    { userId: user._id },
-    { $pull: { items: { address } } }
   );
 
   return NextResponse.json({ success: true });

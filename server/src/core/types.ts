@@ -19,6 +19,7 @@ export type AccountAction = {
 export type WatchlistItem = {
   address: string;
   label: string;
+  emailNotifications: boolean;
   actions: AccountAction[];
 };
 

@@ -1,15 +1,23 @@
 'use client';
 
-import { useToast } from '@/hooks/use-toast';
 import { WatchlistItem } from '@/types';
 import { useRouter } from 'next/navigation';
+import { Notify } from 'notiflix';
 import React, { createContext, useCallback, useContext, useState } from 'react';
 
 type WatchlistContextType = {
   watchlist: WatchlistItem[] | null;
   loading: boolean;
-  addToWatchlist: (address: string, label: string) => Promise<true | void>;
+  addToWatchlist: (
+    address: string,
+    label: string,
+    emailNotifications: boolean
+  ) => Promise<true | void>;
   removeFromWatchlist: (address: string) => Promise<true | void>;
+  updateWatchlistItem: (
+    oldAddress: string,
+    item: Partial<WatchlistItem>
+  ) => Promise<true | void>;
   fetchWatchlist: () => Promise<void>;
 };
 
@@ -21,7 +29,6 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
   const [watchlist, setWatchlist] = useState<WatchlistItem[] | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const toast = useToast();
 
   const fetchWatchlist = useCallback(async () => {
     try {
@@ -42,12 +49,16 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     }
   }, [router]);
 
-  const addToWatchlist = async (address: string, label: string) => {
+  const addToWatchlist = async (
+    address: string,
+    label: string,
+    emailNotifications: boolean
+  ) => {
     try {
       const response = await fetch('/api/watchlists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address, label }),
+        body: JSON.stringify({ address, label, emailNotifications }),
       });
 
       if (response.status === 401) {
@@ -59,19 +70,15 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
         await fetchWatchlist();
         return true;
       } else {
-        toast.toast({
-          title: 'Failed to add to watchlist',
-          description:
-            'Unable to add account to watchlist. Please try again later.',
-        });
+        Notify.failure(
+          'Unable to add account to watchlist. Please try again later.'
+        );
       }
     } catch (error) {
       console.error('Error adding to watchlist:', error);
-      toast.toast({
-        title: 'Failed to add to watchlist',
-        description:
-          'Unable to add account to watchlist. Please try again later.',
-      });
+      Notify.failure(
+        'Unable to add account to watchlist. Please try again later.'
+      );
     }
   };
 
@@ -93,6 +100,35 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateWatchlistItem = async (
+    oldAddress: string,
+    item: Partial<WatchlistItem>
+  ) => {
+    try {
+      const response = await fetch(`/api/watchlists/${oldAddress}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item),
+      });
+
+      if (response.status === 401) {
+        router.push('/login');
+        return;
+      }
+
+      if (response.ok) {
+        await fetchWatchlist();
+        return true;
+      } else {
+        Notify.failure(
+          'Failed to update watchlist item. Please try again later.'
+        );
+      }
+    } catch (error) {
+      console.error('Error updating watchlist item:', error);
+    }
+  };
+
   return (
     <WatchlistContext.Provider
       value={{
@@ -100,6 +136,7 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
         loading,
         addToWatchlist,
         removeFromWatchlist,
+        updateWatchlistItem,
         fetchWatchlist,
       }}
     >

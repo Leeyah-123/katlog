@@ -16,6 +16,10 @@ const WatchlistItemSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  emailNotifications: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const WatchlistSchema = new mongoose.Schema(

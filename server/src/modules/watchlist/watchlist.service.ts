@@ -12,7 +12,8 @@ export class WatchlistService {
   async checkWatchedAddresses(
     transaction: AccountAction
   ): Promise<{ userId: string; account: string; accountLabel: string }[]> {
-    const watchlists = await this.getAllWatchlists();
+    let watchlists = await this.getAllWatchlists();
+
     const notifyUsers: {
       userId: string;
       account: string;
@@ -20,7 +21,9 @@ export class WatchlistService {
     }[] = [];
 
     for (const watchlist of watchlists) {
-      const watchedAddresses = watchlist.items.map((item) => item.address);
+      const watchedAddresses = watchlist.items
+        .filter((item) => item.emailNotifications)
+        .map((item) => item.address);
       if (watchedAddresses.includes(transaction.from)) {
         notifyUsers.push({
           userId: watchlist.userId,

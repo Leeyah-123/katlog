@@ -2,14 +2,13 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Notify } from 'notiflix';
 import { useEffect, useState } from 'react';
 
 export default function SignUpPage() {
-  const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -41,16 +40,10 @@ export default function SignUpPage() {
         router.push('/watchlist');
       } else {
         const data = await response.json();
-        toast.toast({
-          title: 'Signup unsuccessful',
-          description: data.error,
-        });
+        Notify.failure(data.error || 'Signup unsuccessful');
       }
     } catch {
-      toast.toast({
-        title: 'Signup unsuccessful',
-        description: 'An unexpected error occurred',
-      });
+      Notify.failure('An unexpected error occurred. Please try again later.');
     }
   };
 
