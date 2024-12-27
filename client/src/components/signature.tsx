@@ -20,6 +20,7 @@ export function Signature({
           href={`https://solcan.io/tx/${signature}`}
           className="text-[#FFD700] hover:opacity-80 transition-colors"
           title="View on Solcan"
+          target="_blank"
         >
           {truncateAddress(signature)}
         </Link>
