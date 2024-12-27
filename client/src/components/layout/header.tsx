@@ -1,18 +1,12 @@
-import { getUserFromToken } from '@/lib/auth';
+'use client';
+
 import { cn } from '@/lib/utils';
-import { cookies } from 'next/headers';
+import { useAuth } from '@/providers/auth-provider';
 import Link from 'next/link';
 import { UserMenu } from './user-menu';
 
-export default async function Header() {
-  const cookieStore = cookies();
-  const token = (await cookieStore).get('token')?.value;
-  let email = null;
-
-  if (token) {
-    const user = await getUserFromToken(token);
-    email = user ? user.email : null;
-  }
+export default function Header() {
+  const { email } = useAuth();
 
   return (
     <header className={cn('py-4 px-4 glassmorphism')}>
@@ -38,7 +32,7 @@ export default async function Header() {
             Watchlist
           </Link>
 
-          <UserMenu initialEmail={email} />
+          <UserMenu email={email} />
         </nav>
       </div>
     </header>

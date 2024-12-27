@@ -12,12 +12,12 @@ type WatchlistContextType = {
     address: string,
     label: string,
     emailNotifications: boolean
-  ) => Promise<true | void>;
-  removeFromWatchlist: (address: string) => Promise<true | void>;
+  ) => Promise<boolean>;
+  removeFromWatchlist: (address: string) => Promise<boolean>;
   updateWatchlistItem: (
     oldAddress: string,
     item: Partial<WatchlistItem>
-  ) => Promise<true | void>;
+  ) => Promise<boolean>;
   fetchWatchlist: () => Promise<void>;
 };
 
@@ -53,7 +53,7 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     address: string,
     label: string,
     emailNotifications: boolean
-  ) => {
+  ): Promise<boolean> => {
     try {
       const response = await fetch('/api/watchlists', {
         method: 'POST',
@@ -63,7 +63,7 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
 
       if (response.status === 401) {
         router.push('/login');
-        return;
+        return false;
       }
 
       if (response.ok) {
@@ -74,36 +74,42 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
           'Unable to add account to watchlist. Please try again later.'
         );
       }
+
+      return false;
     } catch (error) {
       console.error('Error adding to watchlist:', error);
       Notify.failure(
         'Unable to add account to watchlist. Please try again later.'
       );
+      return false;
     }
   };
 
-  const removeFromWatchlist = async (address: string) => {
+  const removeFromWatchlist = async (address: string): Promise<boolean> => {
     try {
       const response = await fetch(`/api/watchlists/${address}`, {
         method: 'DELETE',
       });
       if (response.status === 401) {
         router.push('/login');
-        return;
+        return false;
       }
       if (response.ok) {
         await fetchWatchlist();
         return true;
       }
+
+      return false;
     } catch (error) {
       console.error('Error removing from watchlist:', error);
+      return false;
     }
   };
 
   const updateWatchlistItem = async (
     oldAddress: string,
     item: Partial<WatchlistItem>
-  ) => {
+  ): Promise<boolean> => {
     try {
       const response = await fetch(`/api/watchlists/${oldAddress}`, {
         method: 'PUT',
@@ -113,7 +119,7 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
 
       if (response.status === 401) {
         router.push('/login');
-        return;
+        return false;
       }
 
       if (response.ok) {
@@ -124,8 +130,11 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
           'Failed to update watchlist item. Please try again later.'
         );
       }
+
+      return false;
     } catch (error) {
       console.error('Error updating watchlist item:', error);
+      return false;
     }
   };
 

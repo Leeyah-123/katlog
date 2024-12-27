@@ -15,3 +15,8 @@ export interface WatchlistItem {
   emailNotifications: boolean;
   actions: AccountAction[];
 }
+
+export interface ValidationResult {
+  valid: boolean;
+  error?: string;
+}

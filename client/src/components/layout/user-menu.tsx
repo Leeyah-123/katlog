@@ -7,23 +7,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/providers/auth-provider';
 import { User } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { Confirm } from 'notiflix';
 
 interface UserMenuProps {
-  initialEmail: string | null;
+  email: string | null;
 }
 
-export function UserMenu({ initialEmail }: UserMenuProps) {
-  const [email, setEmail] = useState<string | null>(initialEmail);
-  const router = useRouter();
+export function UserMenu({ email }: UserMenuProps) {
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
-    await fetch('/api/logout', { method: 'POST' });
-    setEmail(null);
-    router.push('/login');
+    Confirm.show(
+      'Log out',
+      'Are you sure you want to log out?',
+      'Yes',
+      'No',
+      async () => {
+        await logout();
+      }
+    );
   };
 
   if (!email) {

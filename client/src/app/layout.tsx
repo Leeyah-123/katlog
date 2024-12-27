@@ -1,5 +1,6 @@
 import Header from '@/components/layout/header';
 import { cn } from '@/lib/utils';
+import { AuthProvider } from '@/providers/auth-provider';
 import { WatchlistProvider } from '@/providers/watchlist-provider';
 import '@/styles/globals.css';
 import { Inter } from 'next/font/google';
@@ -19,17 +20,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cn(inter.className, 'gradient-bg min-h-screen')}>
-        <WatchlistProvider>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow container mx-auto px-4 py-8">
-              {children}
-            </main>
-            <footer className="py-4 text-center text-sm text-high-contrast-text/80">
-              © 2024 Katlog. All rights reserved.
-            </footer>
-          </div>
-        </WatchlistProvider>
+        <AuthProvider>
+          <WatchlistProvider>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-grow container mx-auto px-4 py-8">
+                {children}
+              </main>
+              <footer className="py-4 text-center text-sm text-high-contrast-text/80">
+                © 2024 Katlog. All rights reserved.
+              </footer>
+            </div>
+          </WatchlistProvider>
+        </AuthProvider>
       </body>
     </html>
   );

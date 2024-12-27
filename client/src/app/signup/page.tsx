@@ -3,6 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/providers/auth-provider';
+import { validateEmail, validatePassword } from '@/utils/validation';
 import { Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Notify } from 'notiflix';
@@ -13,37 +15,44 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const { signup, checkAuth } = useAuth();
 
   useEffect(() => {
-    // Check if the user is already logged in
-    const checkAuth = async () => {
-      const res = await fetch('/api/user');
-      if (res.ok) {
-        // User is logged in, redirect to watchlist
+    const redirectIfLoggedIn = async () => {
+      const isAuthenticated = await checkAuth();
+      if (isAuthenticated) {
         router.push('/watchlist');
       }
     };
-    checkAuth();
-  }, [router]);
+    redirectIfLoggedIn();
+  }, [router, checkAuth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      const response = await fetch('/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+    const { valid: isEmailValid, error: emailError } = validateEmail(email);
+    if (!isEmailValid) {
+      Notify.failure(emailError!);
+    }
 
-      if (response.ok) {
-        router.push('/watchlist');
-      } else {
-        const data = await response.json();
-        Notify.failure(data.error || 'Signup unsuccessful');
-      }
+    const { valid: isPasswordValid, error: passwordError } =
+      validatePassword(password);
+    if (!isPasswordValid) {
+      Notify.failure(passwordError!);
+    }
+
+    if (!isEmailValid || !isPasswordValid) {
+      return;
+    }
+
+    if (!isEmailValid || !isPasswordValid) {
+      return;
+    }
+
+    try {
+      await signup(email, password);
     } catch {
-      Notify.failure('An unexpected error occurred. Please try again later.');
+      // Error is handled by the AuthProvider
     }
   };
 
@@ -51,38 +60,41 @@ export default function SignUpPage() {
     <div className="max-w-md mx-auto mt-8">
       <h1 className="text-2xl font-bold mb-4">Sign Up</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={cn(
-            'glassmorphism placeholder:text-foreground/70 border-white/20'
-          )}
-        />
-
-        <div className="relative">
+        <div className="space-y-1">
           <Input
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className={cn(
               'glassmorphism placeholder:text-foreground/70 border-white/20'
             )}
           />
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            title={showPassword ? 'Hide password' : 'Show password'}
-            onClick={() => setShowPassword(!showPassword)}
-            className={cn(
-              'absolute right-0 top-1/2 -translate-y-1/2 hover:bg-foreground/20 rounded-md'
-            )}
-          >
-            {showPassword ? <EyeOff /> : <Eye />}
-          </Button>
+        </div>
+
+        <div className="space-y-1">
+          <div className="relative">
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={cn(
+                'glassmorphism placeholder:text-foreground/70 border-white/20'
+              )}
+            />
+            <Button
+              type="button"
+              size="icon"
+              title={showPassword ? 'Hide password' : 'Show password'}
+              onClick={() => setShowPassword(!showPassword)}
+              className={cn(
+                'absolute right-0 top-1/2 -translate-y-1/2 hover:bg-foreground/20 rounded-md'
+              )}
+            >
+              {showPassword ? <EyeOff /> : <Eye />}
+            </Button>
+          </div>
         </div>
 
         <Button
