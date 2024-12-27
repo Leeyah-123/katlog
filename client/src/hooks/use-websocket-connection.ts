@@ -40,58 +40,68 @@ export const useWebSocketConnection = () => {
       if (message.type === 'transactions') {
         const newTransactions = message.data as AccountAction[];
 
-        // Filter transactions we don't need
-        newTransactions.filter((transaction) => {
-          for (const item of watchlist) {
-            if (
+        newTransactions.forEach((transaction) => {
+          // Find all matching watchlist items for both from and to addresses
+          const matchingWatchlistItems = watchlist.filter(
+            (item) =>
               item.address === transaction.from ||
               item.address === transaction.to
-            ) {
-              const concernedAddress =
-                transaction.from === item.address
-                  ? transaction.to
-                  : transaction.from;
+          );
 
-              setLatestTransactions((prev) => {
-                // Ensure transaction has not been recorded yet
-                const existingTransaction = prev.find(
-                  (tx) =>
-                    tx.action.signature === transaction.signature &&
-                    tx.concernedAddress === concernedAddress
-                );
-                if (!existingTransaction) {
-                  prev.push({
+          // Process each matching watchlist item
+          matchingWatchlistItems.forEach((item) => {
+            const concernedAddress = item.address;
+
+            // Add to latestTransactions
+            setLatestTransactions((prev) => {
+              // Ensure transaction has not been recorded yet for this specific concerned address
+              const existingTransaction = prev.find(
+                (tx) =>
+                  tx.action.signature === transaction.signature &&
+                  tx.concernedAddress === concernedAddress
+              );
+
+              if (!existingTransaction) {
+                return [
+                  ...prev,
+                  {
                     concernedAddress,
                     label: item.label,
                     action: transaction,
-                  });
-                }
+                  },
+                ];
+              }
+              return prev;
+            });
 
+            // Add to transactions Map
+            setTransactions((prev) => {
+              // Get or initialize transactions array for this address
+              const addressTransactions = prev.get(concernedAddress) || [];
+
+              // Check if transaction already exists for this address
+              if (
+                addressTransactions.some(
+                  (tx) => tx.action.signature === transaction.signature
+                )
+              ) {
                 return prev;
-              });
-              setTransactions((prev) => {
-                // Ensure transaction has not been recorded for this address yet
-                const existingTransactions = prev.get(concernedAddress) || [];
-                if (
-                  existingTransactions.some(
-                    (tx) => tx.action.signature === transaction.signature
-                  )
-                ) {
-                  return prev;
-                }
+              }
 
-                if (!prev.has(concernedAddress)) {
-                  prev.set(concernedAddress, []);
-                }
-                prev.get(concernedAddress)!.push({
+              // Create new Map to trigger state update
+              const newMap = new Map(prev);
+              newMap.set(concernedAddress, [
+                ...addressTransactions,
+                {
                   concernedAddress,
                   label: item.label,
                   action: transaction,
-                });
-                return new Map(prev);
-              });
-            }
-          }
+                },
+              ]);
+
+              return newMap;
+            });
+          });
         });
       }
     };
