@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -11,6 +12,7 @@ export default function SignUpPage() {
   const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -54,9 +56,7 @@ export default function SignUpPage() {
 
   return (
     <div className="max-w-md mx-auto mt-8">
-      <h1 className="text-2xl font-bold mb-4 text-high-contrast-text">
-        Sign Up
-      </h1>
+      <h1 className="text-2xl font-bold mb-4">Sign Up</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           type="email"
@@ -64,22 +64,38 @@ export default function SignUpPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className={cn(
-            'glassmorphism text-high-contrast-text placeholder-high-contrast-text/70 border-white/20'
+            'glassmorphism placeholder:text-foreground/70 border-white/20'
           )}
         />
-        <Input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className={cn(
-            'glassmorphism text-high-contrast-text placeholder-high-contrast-text/70 border-white/20'
-          )}
-        />
+
+        <div className="relative">
+          <Input
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={cn(
+              'glassmorphism placeholder:text-foreground/70 border-white/20'
+            )}
+          />
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            title={showPassword ? 'Hide password' : 'Show password'}
+            onClick={() => setShowPassword(!showPassword)}
+            className={cn(
+              'absolute right-0 top-1/2 -translate-y-1/2 hover:bg-foreground/20 rounded-md'
+            )}
+          >
+            {showPassword ? <EyeOff /> : <Eye />}
+          </Button>
+        </div>
+
         <Button
           type="submit"
           className={cn(
-            'w-full bg-gradient-to-r from-solana-green to-solana-purple text-high-contrast-text font-semibold hover:opacity-90 transition-opacity'
+            'w-full bg-gradient-to-r from-solana-green to-solana-purple font-semibold hover:opacity-90 text-foreground transition-opacity'
           )}
         >
           Sign Up

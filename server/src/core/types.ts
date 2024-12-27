@@ -10,8 +10,9 @@ export type AccountAction = {
   signature: string;
   from: string;
   to: string;
-  action: string;
-  timestamp: number;
+  amount?: number;
+  action: 'Token Transfer' | 'Sol Transfer' | 'Other';
+  timestamp: string;
   success: boolean;
 };
 

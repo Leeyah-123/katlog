@@ -50,7 +50,7 @@ export default function WatchlistManager() {
         <h2 className="text-xl font-semibold mb-2 text-high-contrast-text">
           Add to Watchlist
         </h2>
-        <div className="flex space-x-2">
+        <form className="flex space-x-2">
           <Input
             type="text"
             placeholder="Account Address"
@@ -71,12 +71,13 @@ export default function WatchlistManager() {
           />
           <Button
             size="icon"
+            type="submit"
             onClick={handleAddToWatchlist}
             className={cn('w-32')}
           >
             <Plus className="h-4 w-4" />
           </Button>
-        </div>
+        </form>
       </div>
 
       <h2 className="text-xl font-semibold mb-2 text-high-contrast-text">

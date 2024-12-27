@@ -4,17 +4,18 @@ import Watchlist from '@/models/Watchlist';
 import { NextResponse } from 'next/server';
 import { extractToken } from '../utils';
 
-export async function GET(request: Request) {
-  const token = await extractToken(request);
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function GET() {
   await dbConnect();
 
   const watchlists = await Watchlist.find();
-  return NextResponse.json(watchlists);
+  return NextResponse.json(watchlists, {
+    headers: {
+      'Access-Control-Allow-Origin':
+        process.env.NEXT_PUBLIC_WEBHOOK_SERVER_URL!,
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
 }
 
 export async function POST(request: Request) {

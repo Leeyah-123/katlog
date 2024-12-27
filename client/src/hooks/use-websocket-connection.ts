@@ -37,7 +37,7 @@ export const useWebSocketConnection = () => {
 
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
-      if (message.type === 'transaction') {
+      if (message.type === 'transactions') {
         const newTransactions = message.data as AccountAction[];
 
         // Filter transactions we don't need

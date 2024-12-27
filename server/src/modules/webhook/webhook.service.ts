@@ -76,7 +76,7 @@ export class WebhookService {
 
   private handleMessage(message: any): void {
     logger.debug('Received message:', message.toString());
-    this.broadcast(message.toString());
+    this.broadcastTransactions(message.toString());
   }
 
   private handleClose(ws: WebSocket): void {
@@ -87,12 +87,12 @@ export class WebhookService {
     });
   }
 
-  broadcast(data: any): void {
+  broadcastTransactions(data: any): void {
     WebhookService.clients.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(
           JSON.stringify({
-            type: 'transaction',
+            type: 'transactions',
             data,
           })
         );

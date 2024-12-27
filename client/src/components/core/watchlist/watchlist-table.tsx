@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { useWatchlist } from '@/providers/watchlist-provider';
 import { WatchlistItem } from '@/types';
 import { Trash } from 'lucide-react';
+import { Confirm } from 'notiflix';
 
 interface WatchlistTableProps {
   watchlist: WatchlistItem[];
@@ -25,14 +26,27 @@ export default function WatchlistTable({ watchlist }: WatchlistTableProps) {
   const { removeFromWatchlist } = useWatchlist();
 
   const handleRemoveFromWatchlist = async (address: string) => {
-    const success = await removeFromWatchlist(address);
-    if (success) {
-      toast.toast({
-        title: 'Removed from watchlist',
-        description: 'Address has been removed from watchlist',
-        variant: 'success',
-      });
-    }
+    Confirm.show(
+      'Remove from watchlist',
+      'Are you sure you want to remove this address from watchlist?',
+      'Yes',
+      'No',
+      async () => {
+        const success = await removeFromWatchlist(address);
+        if (success) {
+          toast.toast({
+            title: 'Removed from watchlist',
+            description: 'Address has been removed from watchlist',
+            variant: 'success',
+          });
+        }
+      },
+      () => {
+        toast.toast({
+          title: 'Action cancelled',
+        });
+      }
+    );
   };
 
   return watchlist.length > 0 ? (

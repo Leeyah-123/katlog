@@ -8,7 +8,13 @@ export const config = {
   mainServerUrl: process.env.MAIN_SERVER_URL!,
   environment: process.env.NODE_ENV || 'development',
   email: {
-    seamailerApiKey: process.env.SEAMAILER_API_KEY!,
     from: process.env.EMAIL_FROM!,
+    smtp: {
+      host: process.env.SMTP_HOST!,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.NODE_ENV === 'production',
+      user: process.env.SMTP_USER!,
+      password: process.env.SMTP_PASSWORD!,
+    },
   },
 };

@@ -20,7 +20,7 @@ export class WebhookController {
     this.emailService = new EmailService();
 
     this.handleWebSocketUpgrade = this.handleWebSocketUpgrade.bind(this);
-    this.handleTransaction = this.handleTransaction.bind(this);
+    this.handleTransactions = this.handleTransactions.bind(this);
   }
 
   async handleWebSocketUpgrade(req: Request, res: Response): Promise<void> {
@@ -37,34 +37,29 @@ export class WebhookController {
     });
   }
 
-  async handleTransaction(req: Request, res: Response): Promise<void> {
+  async handleTransactions(req: Request, res: Response): Promise<void> {
     try {
-      const transaction: AccountAction = req.body.data;
+      const transactions: AccountAction[] = req.body.data;
 
       // Broadcast to WebSocket clients
-      this.wsService.broadcast(transaction);
+      this.wsService.broadcastTransactions(transactions);
 
-      // Check watchlists and send notifications
-      const notifyUserIds = await this.watchlistService.checkWatchedAddresses(
-        transaction,
-        req.token!!
-      );
-      if (notifyUserIds.length > 0)
-        console.log('Received transaction, notifyUserIds:', notifyUserIds);
+      for (const transaction of transactions) {
+        // Check watchlists and send notifications
+        const notifyUserIds = await this.watchlistService.checkWatchedAddresses(
+          transaction
+        );
 
-      // Send email notifications
-      await Promise.all(
-        notifyUserIds.map(async (userId) => {
-          // Fetch user email from main server
-          const user = await this.userService.getUserById(userId, req.token!!);
+        // Send email notifications
+        await Promise.all(
+          notifyUserIds.map(async (userId) => {
+            // Fetch user email from main server
+            const user = await this.userService.getUserById(userId);
 
-          return this.emailService.sendNotification(
-            userId,
-            user.email,
-            transaction
-          );
-        })
-      );
+            return this.emailService.sendNotification(user.email, transaction);
+          })
+        );
+      }
 
       res.json({ success: true });
     } catch (error) {
