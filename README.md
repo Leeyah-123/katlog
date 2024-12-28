@@ -25,11 +25,14 @@ The webhook system is configured to:
 ### Data Flow
 
 ```mermaid
-graph LR
-    A[Solana Network] --> B[QuickNode Stream] -->C[QuickNode Function]
-    C --> D[Webhook Endpoint]
-    D --> E[Data Processing]
-    E --> F[Storage/Analytics]
+flowchart LR
+    A["QuickNode Stream
+    (Solana programs+logs)"] -->|Stream to function| B["QuickNode Function
+    (Transform data to human-readable format)"]
+    B -->|Webhook| C["Web Server
+    (ExpressTS)"]
+    C -->|Websockets| D["Web Application
+    (NextJS)"]
 ```
 
 ## Project Structure
