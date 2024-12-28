@@ -34,11 +34,46 @@ export async function POST(request: Request) {
 
   await dbConnect();
 
-  await Watchlist.findOneAndUpdate(
-    { userId: user._id },
-    { $push: { items: { address, label, emailNotifications } } },
-    { upsert: true, new: true }
-  );
+  // Check for existing address or label
+  const existingWatchlist = await Watchlist.findOne({ userId: user._id });
+  if (existingWatchlist) {
+    const addressExists = existingWatchlist.items.some(
+      (item: { address: string }) =>
+        item.address.toLowerCase() === address.toLowerCase()
+    );
+    if (addressExists) {
+      return NextResponse.json(
+        { error: 'This address is already in your watchlist' },
+        { status: 400 }
+      );
+    }
 
-  return NextResponse.json({ success: true });
+    const labelExists = existingWatchlist.items.some(
+      (item: { label: string }) =>
+        item.label.toLowerCase() === label.toLowerCase()
+    );
+    if (labelExists) {
+      return NextResponse.json(
+        { error: 'This label is already in use' },
+        { status: 400 }
+      );
+    }
+  }
+
+  try {
+    await Watchlist.findOneAndUpdate(
+      { userId: user._id },
+      { $push: { items: { address, label, emailNotifications } } },
+      { upsert: true, new: true }
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error adding account to watchlist', error);
+
+    return NextResponse.json(
+      { error: 'Failed to add address to watchlist' },
+      { status: 500 }
+    );
+  }
 }

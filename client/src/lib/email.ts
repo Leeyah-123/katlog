@@ -33,7 +33,6 @@ export async function sendEmail(userId: string, transaction: AccountAction) {
       </ul>
     `,
     });
-    console.log(`Email sent to ${user.email}`);
   } catch (error) {
     console.error('Error sending email:', error);
   }

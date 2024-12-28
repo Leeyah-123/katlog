@@ -1,6 +1,7 @@
 'use client';
 
 import { validateAddress, validateLabel } from '@/utils/validation';
+import { Notify } from 'notiflix';
 import { FormEvent, useState } from 'react';
 
 interface UseWatchlistFormProps {
@@ -8,7 +9,7 @@ interface UseWatchlistFormProps {
     address: string,
     label: string,
     emailNotifications: boolean
-  ) => Promise<boolean>;
+  ) => Promise<{ success: boolean; error?: string }>;
   initialAddress?: string;
   initialLabel?: string;
   initialNotifications?: boolean;
@@ -30,7 +31,6 @@ export const useWatchlistForm = ({
   const resetForm = () => {
     setAddress('');
     setLabel('');
-    setEmailNotifications(false);
     setAddressError('');
     setLabelError('');
   };
@@ -43,22 +43,27 @@ export const useWatchlistForm = ({
 
     if (!addressValidation.valid) {
       setAddressError(addressValidation.error!);
+      Notify.failure(addressValidation.error!);
       return false;
     }
     if (!labelValidation.valid) {
       setLabelError(labelValidation.error!);
+      Notify.failure(labelValidation.error!);
       return false;
     }
 
     setAddressError('');
     setLabelError('');
 
-    const success = await onSubmit(address, label, emailNotifications);
-    if (success) {
+    const result = await onSubmit(address, label, emailNotifications);
+    if (result.success) {
       resetForm();
+      Notify.success('Address added to watchlist');
       return true;
+    } else {
+      Notify.failure(result.error || 'Failed to add address to watchlist');
+      return false;
     }
-    return false;
   };
 
   return {

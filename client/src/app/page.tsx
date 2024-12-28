@@ -1,85 +1,112 @@
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Bell, Eye, Zap } from 'lucide-react';
-import Link from 'next/link';
+import { Card, CardContent } from '@/components/ui/card';
+import { Eye, LineChart, Shield, Zap } from 'lucide-react';
+import * as motion from 'motion/react-client';
 
-export default async function LandingPage() {
+export default function LandingPage() {
+  const features = [
+    {
+      icon: <Eye className="w-6 h-6" />,
+      title: 'Real-time Monitoring',
+      description:
+        'Track your Solana accounts and transactions with instant updates and live monitoring.',
+    },
+    {
+      icon: <Zap className="w-6 h-6" />,
+      title: 'Instant Notifications',
+      description:
+        'Stay informed with blazing-fast alerts powered by QuickNode Streams.',
+    },
+    {
+      icon: <Shield className="w-6 h-6" />,
+      title: 'Secure & Private',
+      description: 'Enterprise-grade security for your data.',
+    },
+    {
+      icon: <LineChart className="w-6 h-6" />,
+      title: 'Analytics Dashboard (Coming Soon)',
+      description:
+        'Visualize your portfolio performance with interactive charts and metrics.',
+    },
+  ];
+
   return (
-    <div className="flex flex-col items-center">
-      {/* Hero Section */}
-      <section className="text-center py-20 px-4">
-        <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white">
-          Monitor Your Solana Accounts with Ease
-        </h1>
-        <p className="text-xl mb-8 text-gray-300 max-w-2xl mx-auto">
-          Katlog helps you keep track of your Solana accounts, transactions, and
-          more in real-time.
-        </p>
-        <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700">
-          <Link href="/signup">
-            Get Started <ArrowRight className="ml-2" />
-          </Link>
-        </Button>
-      </section>
+    <div className="min-h-screen max-w-7xl mx-auto px-6 py-20">
+      <div className="text-center mb-20">
+        <motion.h2
+          className="text-5xl md:text-6xl font-bold text-white mb-6"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          Monitor Your Solana
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
+            {' '}
+            Universe
+          </span>
+        </motion.h2>
 
-      {/* Features Section */}
-      <section className="py-20 px-4 w-full bg-gray-900 bg-opacity-50">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold mb-12 text-center text-white">
-            Key Features
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <FeatureCard
-              icon={<Eye className="w-10 h-10 text-purple-400" />}
-              title="Real-time Monitoring"
-              description="Watch your Solana accounts and receive instant updates on transactions and balance changes."
-            />
-            <FeatureCard
-              icon={<Bell className="w-10 h-10 text-purple-400" />}
-              title="Custom Alerts"
-              description="Set up personalized notifications for specific events or threshold amounts."
-            />
-            <FeatureCard
-              icon={<Zap className="w-10 h-10 text-purple-400" />}
-              title="Fast & Secure"
-              description="Built on cutting-edge technology to ensure speed, reliability, and security for your data."
-            />
-          </div>
-        </div>
-      </section>
+        <motion.p
+          className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.8 }}
+        >
+          Take control of your Solana accounts with real-time monitoring,
+          instant notifications, and powerful analytics - all in one beautiful
+          dashboard.
+        </motion.p>
 
-      {/* CTA Section */}
-      <section className="text-center py-20 px-4">
-        <h2 className="text-3xl font-bold mb-6 text-white">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+        >
+          <Button className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-6 rounded-full text-lg">
+            Get Started
+          </Button>
+        </motion.div>
+      </div>
+
+      <motion.div
+        className="grid md:grid-cols-2 gap-6 mt-20"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.8 }}
+      >
+        {features.map((feature, index) => (
+          <Card
+            key={index}
+            className="bg-white/10 border-0 backdrop-blur-lg hover:bg-white/15 transition-all duration-300"
+          >
+            <CardContent className="p-6">
+              <div className="mb-4 text-purple-400">{feature.icon}</div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                {feature.title}
+              </h3>
+              <p className="text-gray-300">{feature.description}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </motion.div>
+
+      <motion.div
+        className="text-center mt-20"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8, duration: 0.8 }}
+      >
+        <h3 className="text-3xl font-bold text-white mb-6">
           Ready to Take Control?
-        </h2>
-        <p className="text-xl mb-8 text-gray-300 max-w-2xl mx-auto">
-          Join Katlog today and experience a new level of Solana account
-          management.
+        </h3>
+        <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+          Join thousands of Solana users who trust Katlog for their portfolio
+          management needs.
         </p>
-        <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700">
-          <Link href="/signup">
-            Sign Up Now <ArrowRight className="ml-2" />
-          </Link>
+        <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-6 rounded-full text-lg">
+          Sign Up Now
         </Button>
-      </section>
-    </div>
-  );
-}
-
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="bg-gray-800 bg-opacity-50 p-6 rounded-lg">
-      <div className="mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold mb-2 text-white">{title}</h3>
-      <p className="text-gray-400">{description}</p>
+      </motion.div>
     </div>
   );
 }

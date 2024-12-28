@@ -1,18 +1,17 @@
 'use client';
 
-import { Input } from '@/components/ui/input';
+import { useWatchlistForm } from '@/components/core/watchlist/hooks/use-watchlist-form';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { useWatchlistForm } from '@/components/core/watchlist/hooks/use-watchlist-form';
 
 interface AddWatchlistFormProps {
   onSubmit: (
     address: string,
     label: string,
     emailNotifications: boolean
-  ) => Promise<boolean>;
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const AddWatchlistForm = ({ onSubmit }: AddWatchlistFormProps) => {
@@ -30,15 +29,15 @@ export const AddWatchlistForm = ({ onSubmit }: AddWatchlistFormProps) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="flex space-x-2">
+      <div className="flex gap-4">
         <div className="flex-1">
           <Input
             type="text"
-            placeholder="Account Address"
+            placeholder="Address"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             className={cn(
-              'glassmorphism text-white !placeholder-white/70 border-white/20',
+              'bg-white/5 border-white/10 text-white placeholder:text-gray-400 flex-1',
               addressError && '!border-destructive'
             )}
           />
@@ -46,6 +45,7 @@ export const AddWatchlistForm = ({ onSubmit }: AddWatchlistFormProps) => {
             <p className="text-destructive text-xs mt-1">{addressError}</p>
           )}
         </div>
+
         <div className="flex-1">
           <Input
             type="text"
@@ -53,7 +53,7 @@ export const AddWatchlistForm = ({ onSubmit }: AddWatchlistFormProps) => {
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             className={cn(
-              'glassmorphism text-white !placeholder-white/70 border-white/20',
+              'bg-white/5 border-white/10 text-white placeholder:text-gray-400 flex-1',
               labelError && '!border-destructive'
             )}
           />
@@ -61,20 +61,25 @@ export const AddWatchlistForm = ({ onSubmit }: AddWatchlistFormProps) => {
             <p className="text-destructive text-xs mt-1">{labelError}</p>
           )}
         </div>
-        <Button size="icon" type="submit" className="w-32">
-          <Plus className="h-4 w-4" />
+        <Button
+          type="submit"
+          className="bg-blue-500 hover:bg-blue-600 text-foreground"
+        >
+          Add
         </Button>
       </div>
-      <div className="flex items-center space-x-2 mt-2">
+
+      <div className="flex items-center space-x-2 mt-2 text-sm">
         <Checkbox
           id="emailNotifications"
+          className="border-white/30"
           checked={emailNotifications}
           onCheckedChange={(checked) =>
             setEmailNotifications(checked as boolean)
           }
         />
-        <label htmlFor="emailNotifications" className="text-sm text-white">
-          Email notifications
+        <label htmlFor="notifications" className="text-gray-300">
+          Enable email notifications for new addresses by default
         </label>
       </div>
     </form>

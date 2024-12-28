@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
-import { Loading } from 'notiflix';
-import TransactionsTable from '@/components/shared/transactions-table';
-import { useWatchlist } from '@/providers/watchlist-provider';
 import { useWebSocketConnection } from '@/hooks/use-websocket-connection';
+import { useWatchlist } from '@/providers/watchlist-provider';
+import { Loading } from 'notiflix';
+import { useEffect } from 'react';
 import { AddWatchlistForm } from './add-watchlist-form';
 import { WatchlistTable } from './watchlist-table';
+import TransactionsTable from '@/components/shared/transactions-table';
 
 export default function WatchlistManager() {
   const {
@@ -29,27 +29,24 @@ export default function WatchlistManager() {
   }, [loading]);
 
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2 text-high-contrast-text">
-          Add to Watchlist
-        </h2>
-        <AddWatchlistForm onSubmit={addToWatchlist} />
+    <div className="space-y-6">
+      <AddWatchlistForm onSubmit={addToWatchlist} />
+
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">Your Watchlist</h3>
+        <div className="space-y-4">
+          <WatchlistTable
+            watchlist={watchlist ?? []}
+            onUpdate={updateWatchlistItem}
+            onRemove={removeFromWatchlist}
+          />
+        </div>
       </div>
 
-      <h2 className="text-xl font-semibold mb-2 text-high-contrast-text">
-        Your Watchlist
-      </h2>
-      <WatchlistTable
-        watchlist={watchlist ?? []}
-        onUpdate={updateWatchlistItem}
-        onRemove={removeFromWatchlist}
-      />
-
-      <h2 className="text-xl font-semibold my-4 text-high-contrast-text">
-        Recent Transactions
-      </h2>
-      <TransactionsTable transactions={latestTransactions} />
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">Recent Transactions</h3>
+        <TransactionsTable transactions={latestTransactions} />
+      </div>
     </div>
   );
 }

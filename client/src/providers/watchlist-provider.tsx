@@ -2,7 +2,6 @@
 
 import { WatchlistItem } from '@/types';
 import { useRouter } from 'next/navigation';
-import { Notify } from 'notiflix';
 import React, { createContext, useCallback, useContext, useState } from 'react';
 
 type WatchlistContextType = {
@@ -12,12 +11,14 @@ type WatchlistContextType = {
     address: string,
     label: string,
     emailNotifications: boolean
-  ) => Promise<boolean>;
-  removeFromWatchlist: (address: string) => Promise<boolean>;
+  ) => Promise<{ success: boolean; error?: string }>;
+  removeFromWatchlist: (
+    address: string
+  ) => Promise<{ success: boolean; error?: string }>;
   updateWatchlistItem: (
     oldAddress: string,
     item: Partial<WatchlistItem>
-  ) => Promise<boolean>;
+  ) => Promise<{ success: boolean; error?: string }>;
   fetchWatchlist: () => Promise<void>;
 };
 
@@ -42,8 +43,6 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
         const data = await response.json();
         setWatchlist(data);
       }
-    } catch (error) {
-      console.error('Error fetching watchlist:', error);
     } finally {
       setLoading(false);
     }
@@ -53,7 +52,7 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     address: string,
     label: string,
     emailNotifications: boolean
-  ): Promise<boolean> => {
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await fetch('/api/watchlists', {
         method: 'POST',
@@ -63,53 +62,48 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
 
       if (response.status === 401) {
         router.push('/login');
-        return false;
+        return { success: false, error: 'Unauthorized' };
       }
 
       if (response.ok) {
         await fetchWatchlist();
-        return true;
-      } else {
-        Notify.failure(
-          'Unable to add account to watchlist. Please try again later.'
-        );
+        return { success: true };
       }
 
-      return false;
-    } catch (error) {
-      console.error('Error adding to watchlist:', error);
-      Notify.failure(
-        'Unable to add account to watchlist. Please try again later.'
-      );
-      return false;
+      const data = await response.json();
+      return { success: false, error: data.error };
+    } catch {
+      return { success: false, error: 'An unexpected error occurred' };
     }
   };
 
-  const removeFromWatchlist = async (address: string): Promise<boolean> => {
+  const removeFromWatchlist = async (
+    address: string
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await fetch(`/api/watchlists/${address}`, {
         method: 'DELETE',
       });
       if (response.status === 401) {
         router.push('/login');
-        return false;
+        return { success: false, error: 'Unauthorized' };
       }
       if (response.ok) {
         await fetchWatchlist();
-        return true;
+        return { success: true };
       }
 
-      return false;
-    } catch (error) {
-      console.error('Error removing from watchlist:', error);
-      return false;
+      const data = await response.json();
+      return { success: false, error: data.error };
+    } catch {
+      return { success: false, error: 'An unexpected error occurred' };
     }
   };
 
   const updateWatchlistItem = async (
     oldAddress: string,
     item: Partial<WatchlistItem>
-  ): Promise<boolean> => {
+  ): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await fetch(`/api/watchlists/${oldAddress}`, {
         method: 'PUT',
@@ -119,22 +113,18 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
 
       if (response.status === 401) {
         router.push('/login');
-        return false;
+        return { success: false, error: 'Unauthorized' };
       }
 
       if (response.ok) {
         await fetchWatchlist();
-        return true;
-      } else {
-        Notify.failure(
-          'Failed to update watchlist item. Please try again later.'
-        );
+        return { success: true };
       }
 
-      return false;
-    } catch (error) {
-      console.error('Error updating watchlist item:', error);
-      return false;
+      const data = await response.json();
+      return { success: false, error: data.error };
+    } catch {
+      return { success: false, error: 'An unexpected error occurred' };
     }
   };
 

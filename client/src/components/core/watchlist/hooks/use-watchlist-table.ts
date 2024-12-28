@@ -7,8 +7,11 @@ import { useEffect, useState } from 'react';
 
 interface UseWatchlistTableProps {
   watchlist: WatchlistItem[];
-  onUpdate: (address: string, data: Partial<WatchlistItem>) => Promise<boolean>;
-  onRemove: (address: string) => Promise<boolean>;
+  onUpdate: (
+    address: string,
+    data: Partial<WatchlistItem>
+  ) => Promise<{ success: boolean; error?: string }>;
+  onRemove: (address: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const useWatchlistTable = ({
@@ -45,8 +48,25 @@ export const useWatchlistTable = ({
     setEditLabelError('');
   };
 
+  const handleCancelEdit = () => {
+    setEditingItem(null);
+    setEditedAddress('');
+    setEditedLabel('');
+    setEditAddressError('');
+    setEditLabelError('');
+  };
+
   const handleSave = async () => {
     if (!editingItem) return;
+
+    // Do nothing if no change was made
+    if (
+      editedAddress === editingItem.address &&
+      editedLabel === editingItem.label
+    ) {
+      setEditingItem(null);
+      return;
+    }
 
     const { valid: isAddressValid, error: addressError } =
       validateAddress(editedAddress);
@@ -157,6 +177,7 @@ export const useWatchlistTable = ({
     setEditedAddress,
     setEditedLabel,
     handleEdit,
+    handleCancelEdit,
     handleSave,
     handleNotificationToggle,
     handleRemove,

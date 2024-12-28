@@ -25,6 +25,43 @@ export async function PUT(
   await dbConnect();
 
   try {
+    const watchlist = await Watchlist.findOne({ userId: user._id });
+    if (!watchlist) {
+      return NextResponse.json(
+        { error: 'Watchlist not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check for duplicates if address or label is being updated
+    if (updates.address && updates.address !== oldAddress) {
+      const addressExists = watchlist.items.some(
+        (item: { address: string }) =>
+          item.address.toLowerCase() === updates.address.toLowerCase() &&
+          item.address.toLowerCase() !== oldAddress.toLowerCase()
+      );
+      if (addressExists) {
+        return NextResponse.json(
+          { error: 'This address is already in your watchlist' },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (updates.label) {
+      const labelExists = watchlist.items.some(
+        (item: { label: string; address: string }) =>
+          item.label.toLowerCase() === updates.label.toLowerCase() &&
+          item.address.toLowerCase() !== oldAddress.toLowerCase()
+      );
+      if (labelExists) {
+        return NextResponse.json(
+          { error: 'This label is already in use' },
+          { status: 400 }
+        );
+      }
+    }
+
     const result = await Watchlist.findOneAndUpdate(
       {
         userId: user._id,
@@ -48,8 +85,7 @@ export async function PUT(
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error updating watchlist item:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Failed to update watchlist item' },
       { status: 500 }
@@ -81,8 +117,7 @@ export async function DELETE(
     );
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error deleting watchlist item:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Failed to delete watchlist item' },
       { status: 500 }
