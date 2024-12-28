@@ -27,7 +27,7 @@ export default function AccountActions({ address }: AccountActionsProps) {
 
   return (
     <>
-      <audio ref={audioRef} src="/notification.wav" className="hidden" />
+      <audio ref={audioRef} src="/notification.mp3" className="hidden" />
       <TransactionsTable transactions={accountTransactions ?? []} />
     </>
   );
