@@ -1,3 +1,5 @@
+import { TransactionConfirmationStatus } from '@solana/web3.js';
+
 export interface AccountAction {
   signature: string;
   from: string;
@@ -6,6 +8,7 @@ export interface AccountAction {
   action: 'Token Transfer' | 'Sol Transfer' | 'Other';
   timestamp: string;
   success: boolean;
+  status?: TransactionConfirmationStatus;
 }
 
 export interface WatchlistItem {

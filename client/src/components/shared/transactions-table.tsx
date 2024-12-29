@@ -9,6 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { WatchlistAccountTransaction } from '@/hooks/use-websocket-connection';
+import { cn } from '@/lib/utils';
 import { AnimatePresence } from 'motion/react';
 import * as motion from 'motion/react-client';
 import { Account } from '../account';
@@ -40,7 +41,7 @@ export default function TransactionsTable({
             <TableHead className="text-purple-100/60">Amount</TableHead>
             <TableHead className="text-purple-100/60">Action</TableHead>
             <TableHead className="text-purple-100/60">Timestamp</TableHead>
-            <TableHead className="text-purple-100/60">Success</TableHead>
+            <TableHead className="text-purple-100/60">Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -100,16 +101,14 @@ export default function TransactionsTable({
                 <TableCell className="text-purple-100/60">
                   {new Date(tx.action.timestamp).toLocaleString()}
                 </TableCell>
-                <TableCell className="text-purple-100/60">
-                  {tx.action.success ? (
-                    <span className="px-2 py-1 rounded-full bg-green-500 text-purple-200">
-                      Yes
-                    </span>
-                  ) : (
-                    <span className="px-2 py-1 rounded-full bg-red-500 text-purple-200">
-                      No
-                    </span>
+                <TableCell
+                  className={cn(
+                    'px-2 py-1 rounded-full bg-orange-500/20 text-purple-100/60',
+                    tx.action.status === 'confirmed' && 'bg-green-400/60',
+                    tx.action.status === 'finalized' && 'bg-green-500/60'
                   )}
+                >
+                  {tx.action.status}
                 </TableCell>
               </motion.tr>
             ))}

@@ -2,7 +2,7 @@ import { getTransactionStatus as getTransactionConfirmationStatus } from '@/lib/
 import { useAuth } from '@/providers/auth-provider';
 import { useWatchlist } from '@/providers/watchlist-provider';
 import { Notify } from 'notiflix';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { AccountAction } from '../types';
 
@@ -27,6 +27,70 @@ export const useWebSocketConnection = () => {
     if (watchlist === null) fetchWatchlist();
   }, [watchlist, fetchWatchlist]);
 
+  const updateTransactionStatus = useCallback(async (signature: string) => {
+    try {
+      const status = await getTransactionConfirmationStatus(signature);
+
+      // Update latestTransactions
+      setLatestTransactions((prev) =>
+        prev.map((tx) => {
+          if (
+            tx.action.signature === signature &&
+            tx.action.status !== status
+          ) {
+            return { ...tx, action: { ...tx.action, status } };
+          }
+          return tx;
+        })
+      );
+
+      // Update transactions Map
+      setTransactions((prev) => {
+        const newMap = new Map(prev);
+        prev.forEach((txs, address) => {
+          newMap.set(
+            address,
+            txs.map((tx) => {
+              if (
+                tx.action.signature === signature &&
+                tx.action.status !== status
+              ) {
+                return { ...tx, action: { ...tx.action, status } };
+              }
+              return tx;
+            })
+          );
+        });
+        return newMap;
+      });
+    } catch (err) {
+      console.error('Failed to update transaction status:', err);
+    }
+  }, []);
+
+  // Add status checking interval
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Check all transactions in latestTransactions
+      latestTransactions.forEach((tx) => {
+        if (tx.action.status !== 'finalized') {
+          updateTransactionStatus(tx.action.signature);
+        }
+      });
+
+      // Check all transactions in transactions Map
+      transactions.forEach((txs) => {
+        txs.forEach((tx) => {
+          if (tx.action.status !== 'finalized') {
+            updateTransactionStatus(tx.action.signature);
+          }
+        });
+      });
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [latestTransactions, transactions, updateTransactionStatus]);
+
   useEffect(() => {
     if (!watchlist || !userId) return;
 
@@ -45,14 +109,8 @@ export const useWebSocketConnection = () => {
         const newTransactions = message.data as AccountAction[];
 
         newTransactions.forEach((transaction) => {
-          // Update transaction success status
-          getTransactionConfirmationStatus(transaction.signature)
-            .then((status) => {
-              transaction.success = status === 'confirmed';
-            })
-            .catch((err) => {
-              console.log('Unable to update tx status', err);
-            });
+          // Initial status check
+          updateTransactionStatus(transaction.signature);
 
           // Find all matching watchlist items for both from and to addresses
           const matchingWatchlistItems = watchlist.filter(
@@ -137,7 +195,7 @@ export const useWebSocketConnection = () => {
     return () => {
       ws.close();
     };
-  }, [userId, watchlist]);
+  }, [userId, watchlist, updateTransactionStatus]);
 
   return { latestTransactions, transactions };
 };
