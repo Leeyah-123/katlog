@@ -60,7 +60,10 @@ export default function TransactionsTable({
                 <TableCell>
                   {tx.action.from ? (
                     <div className="flex items-center space-x-2">
-                      <Account address={tx.action.from} />
+                      <Account
+                        address={tx.action.from}
+                        link={tx.concernedAddress === tx.action.from}
+                      />
                       {tx.concernedAddress === tx.action.from && tx.label && (
                         <span className="text-purple-300/60">({tx.label})</span>
                       )}
@@ -72,7 +75,10 @@ export default function TransactionsTable({
                 <TableCell>
                   {tx.action.to ? (
                     <div className="flex items-center space-x-2">
-                      <Account address={tx.action.to} />
+                      <Account
+                        address={tx.action.to}
+                        link={tx.concernedAddress === tx.action.to}
+                      />
                       {tx.concernedAddress === tx.action.to && tx.label && (
                         <span className="text-purple-300/60">({tx.label})</span>
                       )}
