@@ -2,7 +2,11 @@ import { authenticateUser } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Watchlist from '@/models/Watchlist';
 import { NextResponse } from 'next/server';
-import { extractToken } from '../../utils';
+import {
+  addAddressToKVStore,
+  extractToken,
+  removeAddressFromKVStore,
+} from '../../utils';
 
 export async function PUT(
   request: Request,
@@ -84,6 +88,13 @@ export async function PUT(
       );
     }
 
+    if (updates.address && updates.address !== oldAddress) {
+      await Promise.all([
+        removeAddressFromKVStore(oldAddress),
+        addAddressToKVStore(updates.address),
+      ]);
+    }
+
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json(
@@ -98,6 +109,7 @@ export async function DELETE(
   { params }: { params: Promise<{ address: string }> }
 ) {
   const token = await extractToken(request);
+  const address = (await params).address;
 
   if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -113,11 +125,14 @@ export async function DELETE(
   try {
     await Watchlist.findOneAndUpdate(
       { userId: user._id },
-      { $pull: { items: { address: (await params).address } } }
+      { $pull: { items: { address } } }
     );
 
+    await removeAddressFromKVStore(address);
+
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.log('Unable to delete watchlist item', error);
     return NextResponse.json(
       { error: 'Failed to delete watchlist item' },
       { status: 500 }

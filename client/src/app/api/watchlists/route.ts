@@ -2,7 +2,7 @@ import { authenticateUser } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Watchlist from '@/models/Watchlist';
 import { NextResponse } from 'next/server';
-import { extractToken } from '../utils';
+import { addAddressToKVStore, extractToken } from '../utils';
 
 export async function GET() {
   await dbConnect();
@@ -66,6 +66,8 @@ export async function POST(request: Request) {
       { $push: { items: { address, label, emailNotifications } } },
       { upsert: true, new: true }
     );
+
+    await addAddressToKVStore(address);
 
     return NextResponse.json({ success: true });
   } catch (error) {
