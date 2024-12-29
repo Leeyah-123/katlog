@@ -37,6 +37,7 @@ export default function TransactionsTable({
             <TableHead className="text-purple-100/60">Signature</TableHead>
             <TableHead className="text-purple-100/60">From</TableHead>
             <TableHead className="text-purple-100/60">To</TableHead>
+            <TableHead className="text-purple-100/60">Amount</TableHead>
             <TableHead className="text-purple-100/60">Action</TableHead>
             <TableHead className="text-purple-100/60">Timestamp</TableHead>
             <TableHead className="text-purple-100/60">Success</TableHead>
@@ -79,6 +80,11 @@ export default function TransactionsTable({
                   ) : (
                     <span className="text-purple-300/60">N/A</span>
                   )}
+                </TableCell>
+                <TableCell>
+                  <span className="text-purple-300/60">
+                    {tx.action.amount ? `${tx.action.amount} SOL` : 'N/A'} SOL
+                  </span>
                 </TableCell>
                 <TableCell>
                   <span className="inline-flex px-2 py-1 rounded-full bg-purple-600/20 text-purple-200 text-sm">
