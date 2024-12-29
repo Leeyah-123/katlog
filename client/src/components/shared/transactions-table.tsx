@@ -54,7 +54,7 @@ export default function TransactionsTable({
                 className="border-purple-600/20 hover:bg-purple-700/20 transition-colors"
               >
                 <TableCell className="font-mono text-sm">
-                  <Signature signature={tx.action.signature} />
+                  <Signature signature={tx.action.signature} link />
                 </TableCell>
                 <TableCell>
                   {tx.action.from ? (
