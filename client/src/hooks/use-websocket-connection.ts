@@ -22,9 +22,24 @@ export const useWebSocketConnection = () => {
 
   const { watchlist, fetchWatchlist } = useWatchlist();
 
+  // Add retry counter map
+  const retryCountRef = useRef<Map<string, number>>(new Map());
+
+  // Calculate interval based on retry count
+  const getCheckInterval = (retryCount: number) => {
+    const baseInterval = 5000; // 5 seconds
+    const multiplier = Math.floor(retryCount / 10);
+    return baseInterval * (multiplier + 1);
+  };
+
   const updateTransactionStatus = useCallback(async (signature: string) => {
     try {
       const status = await getTransactionConfirmationStatus(signature);
+
+      // Reset retry count on successful update
+      if (status === 'finalized') {
+        retryCountRef.current.delete(signature);
+      }
 
       setTransactions((prev) => {
         const newMap = new Map(prev);
@@ -42,23 +57,64 @@ export const useWebSocketConnection = () => {
       });
     } catch (err) {
       console.error('Failed to update transaction status:', err);
+      // Increment retry count on failure
+      const currentRetries = (retryCountRef.current.get(signature) || 0) + 1;
+      retryCountRef.current.set(signature, currentRetries);
     }
   }, []);
 
-  // Update status checking interval
+  // Update status checking interval with progressive delays
   useEffect(() => {
-    const interval = setInterval(() => {
+    const checkStatuses = () => {
       transactions.forEach((txs) => {
         txs.forEach((tx) => {
           if (tx.action.status !== 'finalized') {
-            updateTransactionStatus(tx.action.signature);
+            const retryCount =
+              retryCountRef.current.get(tx.action.signature) || 0;
+            const interval = getCheckInterval(retryCount);
+
+            // Only update if enough time has passed since last retry
+            const lastCheck = tx.action.lastStatusCheck || 0;
+            const now = Date.now();
+            if (now - lastCheck >= interval) {
+              updateTransactionStatus(tx.action.signature);
+              // Update lastStatusCheck timestamp
+              setTransactions((prev) => {
+                const newMap = new Map(prev);
+                prev.forEach((addressTxs, address) => {
+                  newMap.set(
+                    address,
+                    addressTxs.map((addressTx) =>
+                      addressTx.action.signature === tx.action.signature
+                        ? {
+                            ...addressTx,
+                            action: {
+                              ...addressTx.action,
+                              lastStatusCheck: now,
+                            },
+                          }
+                        : addressTx
+                    )
+                  );
+                });
+                return newMap;
+              });
+            }
           }
         });
       });
-    }, 5000);
+    };
 
+    const interval = setInterval(checkStatuses, 1000); // Check every second, but respect individual transaction intervals
     return () => clearInterval(interval);
   }, [transactions, updateTransactionStatus]);
+
+  // Clean up retry counts when component unmounts
+  useEffect(() => {
+    return () => {
+      retryCountRef.current.clear();
+    };
+  }, []);
 
   const connect = useCallback(() => {
     if (!watchlist || !userId) return;
@@ -80,6 +136,8 @@ export const useWebSocketConnection = () => {
         const newTransactions = message.data as AccountAction[];
 
         newTransactions.forEach((transaction) => {
+          transaction.status = 'processed';
+
           updateTransactionStatus(transaction.signature).catch((err) => {
             console.error(
               'Failed to perform initial status check for transaction:',

@@ -9,6 +9,7 @@ export interface AccountAction {
   timestamp: string;
   success: boolean;
   status?: TransactionConfirmationStatus;
+  lastStatusCheck?: number;
 }
 
 export interface WatchlistItem {

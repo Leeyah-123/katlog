@@ -48,7 +48,7 @@ export default function TransactionsTable({
           <AnimatePresence initial={false}>
             {transactions.map((tx) => (
               <motion.tr
-                key={tx.action.signature}
+                key={tx.action.signature + tx.concernedAddress}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
