@@ -1,7 +1,9 @@
-import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Eye, LineChart, Shield, Zap } from 'lucide-react';
 import * as motion from 'motion/react-client';
+import Link from 'next/link';
 
 export default function LandingPage() {
   const features = [
@@ -32,6 +34,12 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen max-w-7xl mx-auto px-6 py-20">
+      <Alert className="mb-8 border-yellow-500/50 bg-yellow-500/10">
+        <AlertDescription className="text-yellow-300">
+          🚧 Currently live on Solana Devnet only. Mainnet support coming soon!
+        </AlertDescription>
+      </Alert>
+
       <div className="text-center mb-20">
         <motion.h2
           className="text-5xl md:text-6xl font-bold text-white mb-6"
@@ -62,9 +70,15 @@ export default function LandingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
         >
-          <Button className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-6 rounded-full text-lg">
+          <Link
+            href="/signup"
+            className={buttonVariants({
+              className:
+                'bg-purple-500 hover:bg-purple-600 text-white px-8 py-6 rounded-full text-lg',
+            })}
+          >
             Get Started
-          </Button>
+          </Link>
         </motion.div>
       </div>
 
@@ -103,9 +117,15 @@ export default function LandingPage() {
           Join thousands of Solana users who trust Katlog for their portfolio
           management needs.
         </p>
-        <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-6 rounded-full text-lg">
+        <Link
+          href="/signup"
+          className={buttonVariants({
+            className:
+              'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-6 rounded-full text-lg',
+          })}
+        >
           Sign Up Now
-        </Button>
+        </Link>
       </motion.div>
     </div>
   );

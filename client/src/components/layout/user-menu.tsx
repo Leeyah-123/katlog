@@ -14,9 +14,10 @@ import { Confirm } from 'notiflix';
 
 interface UserMenuProps {
   email: string | null;
+  isMobile?: boolean;
 }
 
-export function UserMenu({ email }: UserMenuProps) {
+export function UserMenu({ email, isMobile }: UserMenuProps) {
   const { logout } = useAuth();
 
   const handleLogout = async () => {
@@ -30,6 +31,19 @@ export function UserMenu({ email }: UserMenuProps) {
       }
     );
   };
+
+  if (!email && isMobile) {
+    return (
+      <div className="flex flex-col gap-3">
+        <Button asChild variant="outline" className="w-full">
+          <Link href="/login">Log In</Link>
+        </Button>
+        <Button asChild className="w-full">
+          <Link href="/signup">Sign Up</Link>
+        </Button>
+      </div>
+    );
+  }
 
   if (!email) {
     return (
