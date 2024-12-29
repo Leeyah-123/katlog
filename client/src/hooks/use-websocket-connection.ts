@@ -3,6 +3,7 @@ import { useWatchlist } from '@/providers/watchlist-provider';
 import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { AccountAction } from '../types';
+import { Notify } from 'notiflix';
 
 export type WatchlistAccountTransaction = {
   concernedAddress: string;
@@ -26,7 +27,7 @@ export const useWebSocketConnection = () => {
   }, [watchlist, fetchWatchlist]);
 
   useEffect(() => {
-    if (!watchlist) return;
+    if (!watchlist || !userId) return;
 
     const clientId = uuidv4();
     const ws = new WebSocket(
@@ -117,6 +118,9 @@ export const useWebSocketConnection = () => {
     };
 
     ws.onerror = (error) => {
+      Notify.failure(
+        'Unable to connect to websocket. Please refresh the page.'
+      );
       console.error('WebSocket error:', error);
     };
 

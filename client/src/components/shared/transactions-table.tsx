@@ -39,6 +39,7 @@ export default function TransactionsTable({
             <TableHead className="text-purple-100/60">To</TableHead>
             <TableHead className="text-purple-100/60">Action</TableHead>
             <TableHead className="text-purple-100/60">Timestamp</TableHead>
+            <TableHead className="text-purple-100/60">Success</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -86,6 +87,17 @@ export default function TransactionsTable({
                 </TableCell>
                 <TableCell className="text-purple-100/60">
                   {new Date(tx.action.timestamp).toLocaleString()}
+                </TableCell>
+                <TableCell className="text-purple-100/60">
+                  {tx.action.success ? (
+                    <span className="px-2 py-1 rounded-full bg-green-500 text-purple-200">
+                      Yes
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 rounded-full bg-red-500 text-purple-200">
+                      No
+                    </span>
+                  )}
                 </TableCell>
               </motion.tr>
             ))}
