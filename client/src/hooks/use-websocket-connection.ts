@@ -1,6 +1,8 @@
+import { getTransactionStatus as getTransactionConfirmationStatus } from '@/lib/solana';
 import { useAuth } from '@/providers/auth-provider';
 import { useWatchlist } from '@/providers/watchlist-provider';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { Notify } from 'notiflix';
+import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { AccountAction } from '../types';
 
@@ -18,24 +20,23 @@ export const useWebSocketConnection = () => {
   const [latestTransactions, setLatestTransactions] = useState<
     WatchlistAccountTransaction[]
   >([]);
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectAttemptRef = useRef<number>(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>(undefined);
 
   const { watchlist, fetchWatchlist } = useWatchlist();
 
-  const connect = useCallback(() => {
+  useEffect(() => {
+    if (watchlist === null) fetchWatchlist();
+  }, [watchlist, fetchWatchlist]);
+
+  useEffect(() => {
     if (!watchlist || !userId) return;
 
     const clientId = uuidv4();
     const ws = new WebSocket(
       `${process.env.NEXT_PUBLIC_WEBHOOK_SERVER_URL}/api/webhook?clientId=${clientId}&userId=${userId}`
     );
-    wsRef.current = ws;
 
     ws.onopen = () => {
       console.log('Connected to WebSocket server');
-      reconnectAttemptRef.current = 0; // Reset reconnection attempts
     };
 
     ws.onmessage = (event) => {
@@ -44,6 +45,15 @@ export const useWebSocketConnection = () => {
         const newTransactions = message.data as AccountAction[];
 
         newTransactions.forEach((transaction) => {
+          // Update transaction success status
+          getTransactionConfirmationStatus(transaction.signature)
+            .then((status) => {
+              transaction.success = status === 'confirmed';
+            })
+            .catch((err) => {
+              console.log('Unable to update tx status', err);
+            });
+
           // Find all matching watchlist items for both from and to addresses
           const matchingWatchlistItems = watchlist.filter(
             (item) =>
@@ -115,54 +125,19 @@ export const useWebSocketConnection = () => {
         reason: event.reason,
         wasClean: event.wasClean,
       });
-      scheduleReconnect();
     };
 
     ws.onerror = (error) => {
+      Notify.failure(
+        'Unable to connect to websocket. Please refresh the page.'
+      );
       console.error('WebSocket error:', error);
-      // Don't call scheduleReconnect here as onclose will be called after onerror
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, watchlist]);
-
-  const scheduleReconnect = useCallback(() => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-
-    // Exponential backoff with max delay of 30 seconds
-    const delay = Math.min(
-      1000 * Math.pow(2, reconnectAttemptRef.current),
-      30000
-    );
-    console.log(
-      `Scheduling reconnect attempt ${
-        reconnectAttemptRef.current + 1
-      } in ${delay}ms`
-    );
-
-    reconnectTimeoutRef.current = setTimeout(() => {
-      reconnectAttemptRef.current += 1;
-      connect();
-    }, delay);
-  }, [connect]);
-
-  useEffect(() => {
-    if (watchlist === null) fetchWatchlist();
-  }, [watchlist, fetchWatchlist]);
-
-  useEffect(() => {
-    connect();
 
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
+      ws.close();
     };
-  }, [connect]);
+  }, [userId, watchlist]);
 
   return { latestTransactions, transactions };
 };

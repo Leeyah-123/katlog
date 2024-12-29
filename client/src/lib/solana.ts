@@ -13,3 +13,11 @@ export const getSolanaAccountBalance = async (accountAddress: string) => {
 
   return Number(balance) / LAMPORTS_PER_SOL;
 };
+
+export const getTransactionStatus = async (signature: string) => {
+  const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+  const result = await connection.getSignatureStatus(signature, {
+    searchTransactionHistory: true,
+  });
+  return result.value?.confirmationStatus;
+};
