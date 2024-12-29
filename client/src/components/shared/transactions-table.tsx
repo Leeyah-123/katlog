@@ -83,7 +83,7 @@ export default function TransactionsTable({
                 </TableCell>
                 <TableCell>
                   <span className="text-purple-300/60">
-                    {tx.action.amount ? `${tx.action.amount} SOL` : 'N/A'} SOL
+                    {tx.action.amount ? `${tx.action.amount} SOL` : 'N/A'}
                   </span>
                 </TableCell>
                 <TableCell>
