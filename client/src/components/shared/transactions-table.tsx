@@ -103,7 +103,7 @@ export default function TransactionsTable({
                 </TableCell>
                 <TableCell
                   className={cn(
-                    'px-2 py-1 rounded-full bg-orange-500/20 text-purple-100/60',
+                    'inline-flex px-2 py-1 rounded-full bg-blue-500/60 text-purple-100/60 text-sm',
                     tx.action.status === 'confirmed' && 'bg-green-400/60',
                     tx.action.status === 'finalized' && 'bg-green-500/60'
                   )}
