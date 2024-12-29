@@ -14,14 +14,28 @@ import { WatchlistTable } from './watchlist-table';
 const getRecentTransactions = (
   transactions: Map<string, WatchlistAccountTransaction[]>
 ) => {
-  const allTransactions = Array.from(transactions.values())
-    .flat()
-    .sort((a, b) => {
-      return Date.parse(b.action.timestamp) - Date.parse(a.action.timestamp);
-    })
-    .slice(0, 50); // Keep most recent 50 transactions;
+  const seen = new Set<{ signature: string; concernedAddress: string }>();
 
-  return allTransactions;
+  return Array.from(transactions.values())
+    .flat()
+    .filter((tx) => {
+      if (
+        seen.has({
+          signature: tx.action.signature,
+          concernedAddress: tx.concernedAddress,
+        })
+      )
+        return false;
+      seen.add({
+        signature: tx.action.signature,
+        concernedAddress: tx.concernedAddress,
+      });
+      return true;
+    })
+    .sort(
+      (a, b) => Date.parse(b.action.timestamp) - Date.parse(a.action.timestamp)
+    )
+    .slice(0, 50);
 };
 
 export default function WatchlistManager() {

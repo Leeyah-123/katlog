@@ -17,7 +17,7 @@ export function Signature({
     <div className="inline-flex items-center gap-2">
       {link ? (
         <Link
-          href={`https://solcan.io/tx/${signature}`}
+          href={`https://solcan.io/tx/${signature}?cluster=devnet`}
           className="text-[#FFD700] hover:opacity-80 transition-colors"
           title="View on Solcan"
           target="_blank"

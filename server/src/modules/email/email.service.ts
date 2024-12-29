@@ -142,7 +142,7 @@ export class EmailService {
         
         <p>View more details about this transaction on <a href="https://solscan.io/tx/${
           transaction.signature
-        }" style="color: #4f46e5;">Solscan</a></p>
+        }?cluster=devnet" style="color: #4f46e5;">Solscan</a></p>
       </div>
     </body>
     </html>
