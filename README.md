@@ -28,7 +28,7 @@ The webhook system is configured to:
 flowchart LR
     A["QuickNode Stream
     (Solana programs+logs)"] -->|Filter out txs we don't need| B["QuickNode Stream Filter"]
-    B-->|Stream to function| C["QuickNode Function
+    B -->|Stream to function| C["QuickNode Function
     (Transform data to human-readable format)"]
     C -->|Webhook| D["Web Server
     (ExpressTS)"]
