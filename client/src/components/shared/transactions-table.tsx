@@ -82,7 +82,7 @@ export default function TransactionsTable({
                   )}
                 </TableCell>
                 <TableCell>
-                  <span className="text-purple-300/60">
+                  <span className="text-foreground">
                     {tx.action.amount ? `${tx.action.amount} SOL` : 'N/A'}
                   </span>
                 </TableCell>
