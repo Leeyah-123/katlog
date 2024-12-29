@@ -3,7 +3,7 @@
 import { useWebSocketConnection } from '@/hooks/use-websocket-connection';
 import { useWatchlist } from '@/providers/watchlist-provider';
 import { Loading } from 'notiflix';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AddWatchlistForm } from './add-watchlist-form';
 import { WatchlistTable } from './watchlist-table';
 import TransactionsTable from '@/components/shared/transactions-table';
@@ -18,6 +18,8 @@ export default function WatchlistManager() {
     fetchWatchlist,
   } = useWatchlist();
   const { latestTransactions } = useWebSocketConnection();
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const prevTransactionCountRef = useRef(0);
 
   useEffect(() => {
     if (watchlist === null) fetchWatchlist();
@@ -28,8 +30,16 @@ export default function WatchlistManager() {
     Loading.remove();
   }, [loading]);
 
+  useEffect(() => {
+    if (latestTransactions.length > prevTransactionCountRef.current) {
+      audioRef.current?.play();
+    }
+    prevTransactionCountRef.current = latestTransactions.length;
+  }, [latestTransactions]);
+
   return (
     <div className="space-y-6">
+      <audio ref={audioRef} src="/notification.mp3" className="hidden" />
       <AddWatchlistForm onSubmit={addToWatchlist} />
 
       <div className="mt-8">
