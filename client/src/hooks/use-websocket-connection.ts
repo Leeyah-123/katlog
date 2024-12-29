@@ -123,7 +123,7 @@ export const useWebSocketConnection = () => {
     return () => {
       ws.close();
     };
-  }, [watchlist]);
+  }, [userId, watchlist]);
 
   return { latestTransactions, transactions };
 };
