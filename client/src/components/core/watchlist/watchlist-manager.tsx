@@ -1,12 +1,28 @@
 'use client';
 
-import { useWebSocketConnection } from '@/hooks/use-websocket-connection';
+import TransactionsTable from '@/components/shared/transactions-table';
+import {
+  useWebSocketConnection,
+  WatchlistAccountTransaction,
+} from '@/hooks/use-websocket-connection';
 import { useWatchlist } from '@/providers/watchlist-provider';
 import { Loading } from 'notiflix';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { AddWatchlistForm } from './add-watchlist-form';
 import { WatchlistTable } from './watchlist-table';
-import TransactionsTable from '@/components/shared/transactions-table';
+
+const getRecentTransactions = (
+  transactions: Map<string, WatchlistAccountTransaction[]>
+) => {
+  const allTransactions = Array.from(transactions.values())
+    .flat()
+    .sort((a, b) => {
+      return Date.parse(b.action.timestamp) - Date.parse(a.action.timestamp);
+    })
+    .slice(0, 50); // Keep most recent 50 transactions;
+
+  return allTransactions;
+};
 
 export default function WatchlistManager() {
   const {
@@ -17,9 +33,13 @@ export default function WatchlistManager() {
     removeFromWatchlist,
     fetchWatchlist,
   } = useWatchlist();
-  const { latestTransactions } = useWebSocketConnection();
+  const { transactions } = useWebSocketConnection();
   const audioRef = useRef<HTMLAudioElement>(null);
   const prevTransactionCountRef = useRef(0);
+  const recentTransactions = useMemo(
+    () => getRecentTransactions(transactions),
+    [transactions]
+  );
 
   useEffect(() => {
     if (watchlist === null) fetchWatchlist();
@@ -31,11 +51,12 @@ export default function WatchlistManager() {
   }, [loading]);
 
   useEffect(() => {
-    if (latestTransactions.length > prevTransactionCountRef.current) {
+    const totalTransactions = Array.from(transactions.values()).flat().length;
+    if (totalTransactions > prevTransactionCountRef.current) {
       audioRef.current?.play();
     }
-    prevTransactionCountRef.current = latestTransactions.length;
-  }, [latestTransactions]);
+    prevTransactionCountRef.current = totalTransactions;
+  }, [transactions]);
 
   return (
     <div className="space-y-6">
@@ -55,7 +76,7 @@ export default function WatchlistManager() {
 
       <div className="mt-8">
         <h3 className="text-xl font-semibold mb-4">Recent Transactions</h3>
-        <TransactionsTable transactions={latestTransactions} />
+        <TransactionsTable transactions={recentTransactions} />
       </div>
     </div>
   );

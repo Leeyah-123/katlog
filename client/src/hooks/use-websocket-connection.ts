@@ -16,9 +16,6 @@ export const useWebSocketConnection = () => {
   const [transactions, setTransactions] = useState<
     Map<string, WatchlistAccountTransaction[]>
   >(new Map());
-  const [latestTransactions, setLatestTransactions] = useState<
-    WatchlistAccountTransaction[]
-  >([]);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectAttemptRef = useRef<number>(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>(undefined);
@@ -29,34 +26,16 @@ export const useWebSocketConnection = () => {
     try {
       const status = await getTransactionConfirmationStatus(signature);
 
-      // Update latestTransactions
-      setLatestTransactions((prev) =>
-        prev.map((tx) => {
-          if (
-            tx.action.signature === signature &&
-            tx.action.status !== status
-          ) {
-            return { ...tx, action: { ...tx.action, status } };
-          }
-          return tx;
-        })
-      );
-
-      // Update transactions Map
       setTransactions((prev) => {
         const newMap = new Map(prev);
         prev.forEach((txs, address) => {
           newMap.set(
             address,
-            txs.map((tx) => {
-              if (
-                tx.action.signature === signature &&
-                tx.action.status !== status
-              ) {
-                return { ...tx, action: { ...tx.action, status } };
-              }
-              return tx;
-            })
+            txs.map((tx) =>
+              tx.action.signature === signature && tx.action.status !== status
+                ? { ...tx, action: { ...tx.action, status } }
+                : tx
+            )
           );
         });
         return newMap;
@@ -66,17 +45,9 @@ export const useWebSocketConnection = () => {
     }
   }, []);
 
-  // Add status checking interval
+  // Update status checking interval
   useEffect(() => {
     const interval = setInterval(() => {
-      // Check all transactions in latestTransactions
-      latestTransactions.forEach((tx) => {
-        if (tx.action.status !== 'finalized') {
-          updateTransactionStatus(tx.action.signature);
-        }
-      });
-
-      // Check all transactions in transactions Map
       transactions.forEach((txs) => {
         txs.forEach((tx) => {
           if (tx.action.status !== 'finalized') {
@@ -84,10 +55,10 @@ export const useWebSocketConnection = () => {
           }
         });
       });
-    }, 5000); // Check every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [latestTransactions, transactions, updateTransactionStatus]);
+  }, [transactions, updateTransactionStatus]);
 
   const connect = useCallback(() => {
     if (!watchlist || !userId) return;
@@ -109,69 +80,42 @@ export const useWebSocketConnection = () => {
         const newTransactions = message.data as AccountAction[];
 
         newTransactions.forEach((transaction) => {
-          // Initial status check
           updateTransactionStatus(transaction.signature).catch((err) => {
-            console.error('Failed to perform initial status check:', err);
+            console.error(
+              'Failed to perform initial status check for transaction:',
+              err
+            );
           });
 
-          // Find all matching watchlist items for both from and to addresses
           const matchingWatchlistItems = watchlist.filter(
             (item) =>
               item.address === transaction.from ||
               item.address === transaction.to
           );
 
-          // Process each matching watchlist item
           matchingWatchlistItems.forEach((item) => {
             const concernedAddress = item.address;
 
-            // Add to latestTransactions
-            setLatestTransactions((prev) => {
-              // Ensure transaction has not been recorded yet for this specific concerned address
-              const existingTransaction = prev.find(
-                (tx) =>
-                  tx.action.signature === transaction.signature &&
-                  tx.concernedAddress === concernedAddress
-              );
-
-              if (!existingTransaction) {
-                return [
-                  ...prev,
-                  {
-                    concernedAddress,
-                    label: item.label,
-                    action: transaction,
-                  },
-                ];
-              }
-              return prev;
-            });
-
-            // Add to transactions Map
             setTransactions((prev) => {
-              // Get or initialize transactions array for this address
-              const addressTransactions = prev.get(concernedAddress) || [];
+              const addressTxs = prev.get(concernedAddress) || [];
 
-              // Check if transaction already exists for this address
               if (
-                addressTransactions.some(
+                addressTxs.some(
                   (tx) => tx.action.signature === transaction.signature
                 )
               ) {
                 return prev;
               }
 
-              // Create new Map to trigger state update
               const newMap = new Map(prev);
               newMap.set(concernedAddress, [
-                ...addressTransactions,
                 {
                   concernedAddress,
                   label: item.label,
                   action: transaction,
                 },
+                ...addressTxs, // Add new transactions at the beginning
               ]);
-
               return newMap;
             });
           });
@@ -189,7 +133,9 @@ export const useWebSocketConnection = () => {
     };
 
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      if (window !== undefined) {
+        console.error('WebSocket error:', error);
+      }
       // Don't call scheduleReconnect here as onclose will be called after onerror
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -234,5 +180,5 @@ export const useWebSocketConnection = () => {
     };
   }, [connect]);
 
-  return { latestTransactions, transactions };
+  return { transactions };
 };
