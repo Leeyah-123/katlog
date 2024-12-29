@@ -10,6 +10,8 @@ import { Loading } from 'notiflix';
 import { useEffect, useMemo, useRef } from 'react';
 import { AddWatchlistForm } from './add-watchlist-form';
 import { WatchlistTable } from './watchlist-table';
+import { useAudioNotification } from '@/hooks/use-audio-notification';
+import { NotificationPrompt } from '@/components/shared/notification-prompt';
 
 const getRecentTransactions = (
   transactions: Map<string, WatchlistAccountTransaction[]>
@@ -48,12 +50,18 @@ export default function WatchlistManager() {
     fetchWatchlist,
   } = useWatchlist();
   const { transactions } = useWebSocketConnection();
-  const audioRef = useRef<HTMLAudioElement>(null);
   const prevTransactionCountRef = useRef(0);
   const recentTransactions = useMemo(
     () => getRecentTransactions(transactions),
     [transactions]
   );
+  const {
+    audioRef,
+    showPermissionPrompt,
+    setShowPermissionPrompt,
+    enableNotifications,
+    playNotification,
+  } = useAudioNotification();
 
   useEffect(() => {
     if (watchlist === null) fetchWatchlist();
@@ -66,15 +74,24 @@ export default function WatchlistManager() {
 
   useEffect(() => {
     const totalTransactions = Array.from(transactions.values()).flat().length;
-    if (totalTransactions > prevTransactionCountRef.current) {
-      audioRef.current?.play();
+    if (
+      (totalTransactions > prevTransactionCountRef.current &&
+        watchlist?.length) ||
+      0 > 0
+    ) {
+      playNotification();
     }
     prevTransactionCountRef.current = totalTransactions;
-  }, [transactions]);
+  }, [transactions, watchlist, playNotification]);
 
   return (
     <div className="space-y-6">
       <audio ref={audioRef} src="/notification.mp3" className="hidden" />
+      <NotificationPrompt
+        open={showPermissionPrompt}
+        onClose={() => setShowPermissionPrompt(false)}
+        onEnable={enableNotifications}
+      />
       <AddWatchlistForm onSubmit={addToWatchlist} />
 
       <div className="mt-8">

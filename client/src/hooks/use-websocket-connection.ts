@@ -112,6 +112,7 @@ export const useWebSocketConnection = () => {
   // Clean up retry counts when component unmounts
   useEffect(() => {
     return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       retryCountRef.current.clear();
     };
   }, []);
