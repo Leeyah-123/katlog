@@ -9,6 +9,16 @@ export class WatchlistService {
     return watchlists;
   }
 
+  async getWatchlistByUserId(userId: string): Promise<Watchlist[]> {
+    const watchlists = await this.getAllWatchlists();
+
+    const userWatchlists = watchlists.filter(
+      (watchlist) => watchlist.userId === userId
+    );
+
+    return userWatchlists;
+  }
+
   async checkWatchedAddresses(
     transaction: AccountAction
   ): Promise<{ userId: string; account: string; accountLabel: string }[]> {

@@ -11,6 +11,7 @@ import {
 } from 'react';
 
 interface AuthContextType {
+  userId: string | null;
   email: string | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
@@ -21,6 +22,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const router = useRouter();
 
@@ -29,12 +31,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/user');
       if (res.ok) {
         const data = await res.json();
+        setUserId(data._id);
         setEmail(data.email);
         return true;
       }
       return false;
     } catch {
       return false;
+    }
+  };
+
+  const getUserId = async () => {
+    try {
+      const res = await fetch('/api/user');
+      if (res.ok) {
+        const data = await res.json();
+        return data._id;
+      }
+      return null;
+    } catch {
+      return null;
     }
   };
 
@@ -48,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         setEmail(email);
+        setUserId(await getUserId());
         router.push('/watchlist');
       } else {
         const data = await response.json();
@@ -71,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         setEmail(email);
+        setUserId(await getUserId());
         router.push('/watchlist');
       } else {
         const data = await response.json();
@@ -104,7 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ email, login, signup, logout, checkAuth }}>
+    <AuthContext.Provider
+      value={{ userId, email, login, signup, logout, checkAuth }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -25,9 +25,16 @@ export class WebhookController {
 
   async handleWebSocketUpgrade(req: Request, res: Response): Promise<void> {
     const clientId = req.query.clientId as string;
+    const userId = req.query.userId as string;
 
-    if (!clientId) {
-      throw new AppError(400, 'Client ID is required');
+    if (!clientId || !userId) {
+      throw new AppError(400, 'Client ID and User ID are required');
+    }
+
+    // Validate userId exists
+    const userExists = await this.userService.getUserById(userId);
+    if (!userExists) {
+      throw new AppError(401, 'Invalid User ID');
     }
 
     res.writeHead(101, {

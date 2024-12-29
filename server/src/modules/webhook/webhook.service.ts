@@ -1,10 +1,17 @@
 import { Server } from 'http';
 import { WebSocket, WebSocketServer } from 'ws';
 import logger from '../../utils/logger';
+import { WatchlistService } from '../watchlist/watchlist.service';
 
 export class WebhookService {
   private wss: WebSocketServer | null = null;
-  private static clients: Map<string, WebSocket> = new Map();
+  private static clients: Map<string, { ws: WebSocket; userId: string }> =
+    new Map();
+  private watchlistService: WatchlistService;
+
+  constructor() {
+    this.watchlistService = new WatchlistService();
+  }
 
   initialize(server: Server): void {
     if (this.wss) return;
@@ -28,23 +35,36 @@ export class WebhookService {
     });
 
     this.wss.on('connection', (ws: WebSocket, request: any) => {
-      const clientId = this.getClientIdFromUrl(request.url);
-      if (clientId) {
-        this.handleConnection(ws, clientId);
+      const { clientId, userId } = this.extractClientIdAndUserIdFromUrl(
+        request.url
+      );
+
+      if (clientId && userId) {
+        this.handleConnection(ws, clientId, userId);
       } else {
-        ws.close(1002, 'Client ID required');
+        ws.close(1002, 'Client ID and User ID required');
       }
     });
   }
 
-  private getClientIdFromUrl(url: string): string | null {
+  private extractClientIdAndUserIdFromUrl(url: string): {
+    clientId: string | null;
+    userId: string | null;
+  } {
     const params = new URLSearchParams(url.split('?')[1]);
-    return params.get('clientId');
+    return {
+      clientId: params.get('clientId'),
+      userId: params.get('userId'),
+    };
   }
 
-  private handleConnection(ws: WebSocket, clientId: string): void {
-    logger.info(`Client connected: ${clientId}`);
-    WebhookService.clients.set(clientId, ws);
+  private handleConnection(
+    ws: WebSocket,
+    clientId: string,
+    userId: string
+  ): void {
+    logger.info(`Client connected: ${clientId} for user: ${userId}`);
+    WebhookService.clients.set(clientId, { ws, userId });
 
     const pingInterval = this.setupPingInterval(ws);
 
@@ -81,23 +101,43 @@ export class WebhookService {
 
   private handleClose(ws: WebSocket): void {
     WebhookService.clients.forEach((value, key) => {
-      if (value === ws) {
+      if (value.ws === ws) {
         WebhookService.clients.delete(key);
       }
     });
   }
 
-  broadcastTransactions(data: any): void {
-    WebhookService.clients.forEach((ws) => {
-      if (ws.readyState === WebSocket.OPEN) {
+  async broadcastTransactions(data: any): Promise<void> {
+    const transactions = Array.isArray(data) ? data : [data];
+
+    for (const [clientId, { ws, userId }] of WebhookService.clients.entries()) {
+      if (ws.readyState !== WebSocket.OPEN) continue;
+
+      // Get user's watchlist addresses
+      const watchlist = await this.watchlistService.getWatchlistByUserId(
+        userId
+      );
+      const watchedAddresses = new Set(
+        watchlist.reduce((acc, item) => {
+          item.items.forEach((i) => acc.add(i.address));
+          return acc;
+        }, new Set<string>())
+      );
+
+      // Filter transactions relevant to this user
+      const relevantTransactions = transactions.filter(
+        (tx) => watchedAddresses.has(tx.from) || watchedAddresses.has(tx.to)
+      );
+
+      if (relevantTransactions.length > 0) {
         ws.send(
           JSON.stringify({
             type: 'transactions',
-            data,
+            data: relevantTransactions,
           })
         );
       }
-    });
+    }
   }
 
   getWSS(): WebSocketServer | null {

@@ -1,3 +1,4 @@
+import { useAuth } from '@/providers/auth-provider';
 import { useWatchlist } from '@/providers/watchlist-provider';
 import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,6 +11,7 @@ export type WatchlistAccountTransaction = {
 };
 
 export const useWebSocketConnection = () => {
+  const { userId } = useAuth();
   const [transactions, setTransactions] = useState<
     Map<string, WatchlistAccountTransaction[]>
   >(new Map());
@@ -28,7 +30,7 @@ export const useWebSocketConnection = () => {
 
     const clientId = uuidv4();
     const ws = new WebSocket(
-      `${process.env.NEXT_PUBLIC_WEBHOOK_SERVER_URL}/api/webhook?clientId=${clientId}`
+      `${process.env.NEXT_PUBLIC_WEBHOOK_SERVER_URL}/api/webhook?clientId=${clientId}&userId=${userId}`
     );
 
     ws.onopen = () => {
