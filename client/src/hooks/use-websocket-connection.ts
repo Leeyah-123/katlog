@@ -110,7 +110,9 @@ export const useWebSocketConnection = () => {
 
         newTransactions.forEach((transaction) => {
           // Initial status check
-          updateTransactionStatus(transaction.signature);
+          updateTransactionStatus(transaction.signature).catch((err) => {
+            console.error('Failed to perform initial status check:', err);
+          });
 
           // Find all matching watchlist items for both from and to addresses
           const matchingWatchlistItems = watchlist.filter(

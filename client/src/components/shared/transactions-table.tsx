@@ -101,14 +101,16 @@ export default function TransactionsTable({
                 <TableCell className="text-purple-100/60">
                   {new Date(tx.action.timestamp).toLocaleString()}
                 </TableCell>
-                <TableCell
-                  className={cn(
-                    'inline-flex px-2 py-1 rounded-full bg-blue-500/60 text-purple-100/60 text-sm',
-                    tx.action.status === 'confirmed' && 'bg-green-400/60',
-                    tx.action.status === 'finalized' && 'bg-green-500/60'
-                  )}
-                >
-                  {tx.action.status}
+                <TableCell>
+                  <span
+                    className={cn(
+                      'inline-flex px-2 py-1 rounded-full bg-blue-500/60 text-purple-100/60 text-sm',
+                      tx.action.status === 'confirmed' && 'bg-green-400/60',
+                      tx.action.status === 'finalized' && 'bg-green-500/60'
+                    )}
+                  >
+                    {tx.action.status}
+                  </span>
                 </TableCell>
               </motion.tr>
             ))}
