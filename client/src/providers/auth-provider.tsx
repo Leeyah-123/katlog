@@ -10,7 +10,6 @@ interface AuthContextType {
   email: string | null;
   setEmail: (email: string | null) => void;
   isAuthenticated: boolean;
-  loading: boolean;
   signMessage: () => Promise<string>;
 }
 
@@ -20,69 +19,27 @@ const AuthContext = createContext<AuthContextType>({
   email: null,
   setEmail: () => {},
   isAuthenticated: false,
-  loading: false,
   signMessage: async () => '',
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { connected, publicKey, signMessage, connecting } = useWallet();
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const { connected, publicKey, signMessage } = useWallet();
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (connecting) return;
-
     if (connected && publicKey) {
-      handleWalletConnect(publicKey.toBase58());
-    } else {
-      setWalletAddress(null);
-      setUserId(null);
-      setEmail(null);
-
-      setLoading(false);
+      fetch('/api/user/profile', {
+        headers: { 'x-wallet-address': publicKey.toBase58() },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setUserId(data._id);
+          setEmail(data.email);
+        })
+        .catch(() => setEmail(null));
     }
-  }, [connecting, connected, publicKey]);
-
-  const handleWalletConnect = async (address: string) => {
-    // TODO: Better error handling
-    setLoading(true);
-    try {
-      const response = await fetch('/api/auth/wallet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: address }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setWalletAddress(address);
-        setUserId(data._id);
-        setEmail(data.email);
-      } else if (response.status === 404) {
-        // Create a new account for the wallet address
-        const createResponse = await fetch('/api/auth/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ walletAddress: address }),
-        });
-
-        const createData = await createResponse.json();
-
-        if (createResponse.ok) {
-          setWalletAddress(address);
-          setUserId(createData._id);
-          setEmail(createData.email);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to authenticate wallet:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [connected, publicKey]);
 
   const handleSignMessage = async () => {
     if (!signMessage || !publicKey) throw new Error('Wallet not connected');
@@ -95,12 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const value = {
-    walletAddress,
+    walletAddress: publicKey?.toBase58() || null,
     userId,
     email,
     setEmail,
     isAuthenticated: connected,
-    loading,
     signMessage: handleSignMessage,
   };
 

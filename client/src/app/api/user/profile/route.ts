@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import { NextResponse } from 'next/server';
+import { extractAuth } from '../../utils';
 
 export async function GET(request: Request) {
-  const walletAddress = request.headers.get('x-wallet-address');
+  const { walletAddress } = await extractAuth(request);
   if (!walletAddress) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -11,14 +12,11 @@ export async function GET(request: Request) {
   await dbConnect();
   const user = await User.findOne({ walletAddress });
 
-  return NextResponse.json({
-    email: user?.email || null,
-    walletAddress,
-  });
+  return NextResponse.json(user);
 }
 
 export async function POST(request: Request) {
-  const walletAddress = request.headers.get('x-wallet-address');
+  const { walletAddress } = await extractAuth(request);
   if (!walletAddress) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

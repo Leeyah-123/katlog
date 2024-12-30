@@ -3,6 +3,8 @@
 import { Account } from '@/components/account';
 import { useWebSocketConnection } from '@/hooks/use-websocket-connection';
 import { getSolanaAccountBalance } from '@/lib/solana';
+import { cn } from '@/lib/utils';
+import { LoaderPinwheel } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface AccountDetailsProps {
@@ -10,6 +12,7 @@ interface AccountDetailsProps {
 }
 
 export default function AccountDetails({ address }: AccountDetailsProps) {
+  const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState(0);
   const { transactions } = useWebSocketConnection();
   const accountTransactions = transactions.get(address);
@@ -20,14 +23,20 @@ export default function AccountDetails({ address }: AccountDetailsProps) {
     if (!accountTransactions) return;
 
     if (accountTransactions.length > prevTransactionCountRef.current) {
-      getSolanaAccountBalance(address).then(setBalance);
+      setLoading(true);
+
+      getSolanaAccountBalance(address)
+        .then(setBalance)
+        .finally(() => setLoading(false));
     }
 
     prevTransactionCountRef.current = accountTransactions.length;
   }, [accountTransactions, address]);
 
   useEffect(() => {
-    getSolanaAccountBalance(address).then(setBalance);
+    getSolanaAccountBalance(address)
+      .then(setBalance)
+      .finally(() => setLoading(false));
   }, [address]);
 
   return (
@@ -39,7 +48,18 @@ export default function AccountDetails({ address }: AccountDetailsProps) {
         </div>
         <div className="text-right">
           <label className="text-sm text-gray-300">Balance</label>
-          <div className="text-lg font-medium">{balance} SOL</div>
+          <div
+            className={cn(
+              'text-lg font-medium',
+              loading && 'grid place-items-center'
+            )}
+          >
+            {loading ? (
+              <LoaderPinwheel className="w-4 h-4 animate-spin" />
+            ) : (
+              `${balance} SOL`
+            )}
+          </div>
         </div>
       </div>
     </div>
