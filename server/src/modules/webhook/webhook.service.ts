@@ -110,7 +110,7 @@ export class WebhookService {
   async broadcastTransactions(data: any): Promise<void> {
     const transactions = Array.isArray(data) ? data : [data];
 
-    for (const [clientId, { ws, userId }] of WebhookService.clients.entries()) {
+    for (const [, { ws, userId }] of WebhookService.clients.entries()) {
       if (ws.readyState !== WebSocket.OPEN) continue;
 
       // Get user's watchlist addresses

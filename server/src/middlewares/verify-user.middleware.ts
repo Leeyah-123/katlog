@@ -1,37 +1,17 @@
-import type { Request, RequestHandler } from 'express';
-import { config } from '../config';
+import { NextFunction, Request, Response } from 'express';
 
-export const verifyUser: RequestHandler = async (req, res, next) => {
-  const token = extractToken(req);
+export const verifyUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const walletAddress = req.headers['x-wallet-address'];
 
-  try {
-    const response = await fetch(`${config.mainServerUrl}/api/user`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const user = await response.json();
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
-    }
-
-    req.token = token;
-    req.user = user;
-    next();
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, message: 'Failed to authenticate user' });
+  if (!walletAddress) {
+    return res.status(401).json({ error: 'Missing wallet address' });
   }
-};
 
-const extractToken = (req: Request): string | undefined => {
-  // Check Authorization header first
-  const authHeader = req.headers.authorization?.split(' ')[1];
-  if (authHeader) return authHeader;
-
-  // Check for token in cookies
-  const cookieToken = req.cookies?.auth_token;
-  return cookieToken;
+  // Add the wallet address to the request object
+  req.user = { walletAddress: walletAddress as string };
+  next();
 };

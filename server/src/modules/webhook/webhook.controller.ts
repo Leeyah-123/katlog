@@ -63,14 +63,18 @@ export class WebhookController {
             // Fetch user email from main server
             const user = await this.userService.getUserById(userId);
 
-            return this.emailService.sendNotification({
+            if (!user.email) return;
+
+            return this.emailService.sendTransactionAlert({
               email: user.email,
               account,
               accountLabel,
               transaction,
             });
           })
-        );
+        ).catch((err) => {
+          logger.error('Failed to send email notifications:', err);
+        });
       }
 
       res.json({ success: true });

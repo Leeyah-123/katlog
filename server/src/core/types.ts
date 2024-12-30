@@ -29,6 +29,7 @@ export type Watchlist = {
 };
 
 export type User = {
-  _id: string;
-  email: string;
+  _id?: string;
+  email?: string;
+  walletAddress: string;
 };
