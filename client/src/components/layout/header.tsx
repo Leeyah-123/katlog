@@ -6,11 +6,20 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { AnimatePresence } from 'motion/react';
 import * as motion from 'motion/react-client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function Header() {
   const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuRef.current) return;
+
+    if (isOpen) {
+      menuRef.current.focus();
+    }
+  }, [isOpen]);
 
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
@@ -28,8 +37,9 @@ export default function Header() {
       className={cn(
         'sticky z-40 max-w-7xl top-0 md:top-5 mx-auto px-4 py-6 glassmorphism'
       )}
+      role="banner"
     >
-      <nav>
+      <nav role="navigation" aria-label="Main navigation">
         <div className="flex justify-between items-center">
           <motion.h1
             className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-200 to-pink-200"
@@ -47,12 +57,14 @@ export default function Header() {
                 <Link
                   href="/watchlist"
                   className="text-white hover:text-gray-300"
+                  aria-label="Go to watchlist"
                 >
                   Watchlist
                 </Link>
                 <Link
                   href="/profile"
                   className="text-white hover:text-gray-300"
+                  aria-label="Go to profile"
                 >
                   Profile
                 </Link>
@@ -71,6 +83,8 @@ export default function Header() {
                   className="z-50 text-white p-2"
                   onClick={() => setIsOpen(!isOpen)}
                   aria-label="Toggle menu"
+                  aria-expanded={isOpen}
+                  aria-controls="mobile-menu"
                 >
                   <motion.svg
                     width="24"
@@ -102,6 +116,9 @@ export default function Header() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       onClick={() => setIsOpen(false)}
+                      role="dialog"
+                      aria-modal="true"
+                      aria-labelledby="mobile-menu"
                     >
                       <motion.div
                         className="fixed right-0 top-0 h-max w-64 bg-gray-900 p-6 z-50"
@@ -115,12 +132,16 @@ export default function Header() {
                           damping: 30,
                         }}
                         onClick={(e) => e.stopPropagation()}
+                        id="mobile-menu"
+                        tabIndex={-1}
+                        ref={menuRef}
                       >
                         <div className="flex flex-col gap-6 mt-12">
                           <Link
                             href="/watchlist"
                             className="text-white hover:text-gray-300"
                             onClick={() => setIsOpen(false)}
+                            aria-label="Go to watchlist"
                           >
                             Watchlist
                           </Link>
@@ -128,6 +149,7 @@ export default function Header() {
                             href="/profile"
                             className="text-white hover:text-gray-300"
                             onClick={() => setIsOpen(false)}
+                            aria-label="Go to profile"
                           >
                             Profile
                           </Link>

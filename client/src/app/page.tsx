@@ -1,11 +1,16 @@
+'use client';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { Eye, LineChart, Shield, Zap } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import Link from 'next/link';
 
 export default function LandingPage() {
+  const { connect, connected } = useWallet();
+
   const features = [
     {
       icon: <Eye className="w-6 h-6" />,
@@ -70,15 +75,24 @@ export default function LandingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
         >
-          <Link
-            href="/watchlist"
-            className={buttonVariants({
-              className:
-                'bg-purple-500 hover:bg-purple-600 text-white px-8 py-6 rounded-full text-lg',
-            })}
-          >
-            Get Started
-          </Link>
+          {connected ? (
+            <Link
+              href="/watchlist"
+              className={buttonVariants({
+                className:
+                  'bg-purple-500 hover:bg-purple-600 text-white px-8 py-6 rounded-full text-lg',
+              })}
+            >
+              Get Started
+            </Link>
+          ) : (
+            <Button
+              className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-6 rounded-full text-lg"
+              onClick={() => connect()}
+            >
+              Connect Wallet
+            </Button>
+          )}
         </motion.div>
       </div>
 
