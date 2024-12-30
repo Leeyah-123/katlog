@@ -8,6 +8,18 @@ import {
   removeAddressFromKVStore,
 } from '../../utils';
 
+// Helper function to check if address is watched by other users
+async function isAddressWatchedByOthers(
+  address: string,
+  currentUserId: string
+) {
+  const watchers = await Watchlist.find({
+    userId: { $ne: currentUserId },
+    'items.address': address,
+  });
+  return watchers.length > 0;
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ address: string }> }
@@ -85,10 +97,17 @@ export async function PUT(
     }
 
     if (updates.address && updates.address !== oldAddress) {
-      await Promise.all([
-        removeAddressFromKVStore(oldAddress),
-        addAddressToKVStore(updates.address),
-      ]);
+      // Add new address to KV store first
+      await addAddressToKVStore(updates.address);
+
+      // Only remove old address if no one else is watching it
+      const isWatched = await isAddressWatchedByOthers(
+        oldAddress,
+        user._id.toString()
+      );
+      if (!isWatched) {
+        await removeAddressFromKVStore(oldAddress);
+      }
     }
 
     await Watchlist.findOneAndUpdate(
@@ -105,6 +124,7 @@ export async function PUT(
       },
       { new: true }
     ).catch(async () => {
+      // If update fails, clean up the new address from KV store
       await removeAddressFromKVStore(updates.address);
       throw new Error();
     });
@@ -143,9 +163,16 @@ export async function DELETE(
       { $pull: { items: { address } } }
     );
 
-    await removeAddressFromKVStore(address).catch((error) => {
-      console.log('Unable to remove address from KV store', error);
-    });
+    // Only remove from KV store if no other users are watching
+    const isWatched = await isAddressWatchedByOthers(
+      address,
+      user._id.toString()
+    );
+    if (!isWatched) {
+      await removeAddressFromKVStore(address).catch((error) => {
+        console.log('Unable to remove address from KV store', error);
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
