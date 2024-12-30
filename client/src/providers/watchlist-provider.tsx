@@ -27,6 +27,7 @@ type WatchlistContextType = {
     item: Partial<WatchlistItem>
   ) => Promise<{ success: boolean; error?: string }>;
   fetchWatchlist: () => Promise<void>;
+  checkAddress: (address: string) => Promise<boolean>;
 };
 
 const WatchlistContext = createContext<WatchlistContextType | undefined>(
@@ -197,6 +198,32 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     [walletAddress, fetchWatchlist]
   );
 
+  const checkAddress = useCallback(
+    async (address: string) => {
+      if (!walletAddress) return false;
+
+      try {
+        const response = await fetch(
+          `/api/watchlists/check?address=${address}`,
+          {
+            headers: {
+              'x-wallet-address': walletAddress,
+            },
+          }
+        );
+
+        if (!response.ok) return false;
+
+        const data = await response.json();
+        return data.exists;
+      } catch (error) {
+        console.error('Error checking address:', error);
+        return false;
+      }
+    },
+    [walletAddress]
+  );
+
   const value = {
     watchlist,
     loading,
@@ -205,6 +232,7 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     removeFromWatchlist,
     updateWatchlistItem,
     fetchWatchlist,
+    checkAddress,
   };
 
   return (
