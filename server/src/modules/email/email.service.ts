@@ -19,7 +19,7 @@ export class EmailService {
     });
   }
 
-  async sendNotification({
+  async sendTransactionAlert({
     email,
     account,
     accountLabel,
