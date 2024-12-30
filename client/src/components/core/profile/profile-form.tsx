@@ -70,8 +70,9 @@ export function ProfileForm({ initialEmail }: ProfileFormProps) {
       />
       <Button
         type="submit"
-        disabled={isSubmitting}
-        className="bg-blue-500 hover:bg-blue-600"
+        variant="secondary"
+        disabled={isSubmitting || !newEmail || newEmail === initialEmail}
+        className="disabled:cursor-not-allowed disabled:pointer-events-auto"
       >
         {isSubmitting ? 'Saving...' : 'Save Email'}
       </Button>
