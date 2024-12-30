@@ -1,4 +1,4 @@
-import { extractToken } from '@/app/api/utils';
+import { extractAuth } from '@/app/api/utils';
 import { authenticateUser } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Watchlist from '@/models/Watchlist';
@@ -8,13 +8,13 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const token = await extractToken(request);
+  const { error, walletAddress } = await extractAuth(request);
 
-  if (!token) {
+  if (error || !walletAddress) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const user = await authenticateUser(token);
+  const user = await authenticateUser(walletAddress);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

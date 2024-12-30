@@ -1,5 +1,5 @@
 import { WatchlistItem } from '@/types';
-import Watchlist, { WatchlistType } from '../models/Watchlist';
+import Watchlist, { WatchlistType } from '@/models/Watchlist';
 import dbConnect from './mongodb';
 
 export async function getAllWatchlists(): Promise<WatchlistType[]> {

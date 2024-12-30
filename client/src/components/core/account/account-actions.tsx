@@ -1,10 +1,10 @@
 'use client';
 
+import { NotificationPrompt } from '@/components/shared/notification-prompt';
 import TransactionsTable from '@/components/shared/transactions-table';
+import { useAudioNotification } from '@/hooks/use-audio-notification';
 import { useWebSocketConnection } from '@/hooks/use-websocket-connection';
 import { useEffect, useRef } from 'react';
-import { useAudioNotification } from '@/hooks/use-audio-notification';
-import { NotificationPrompt } from '@/components/shared/notification-prompt';
 
 interface AccountActionsProps {
   address: string;

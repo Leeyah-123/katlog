@@ -1,16 +1,16 @@
-import { getUserFromToken } from '@/lib/auth';
+import { getUserFromWalletAddress } from '@/lib/auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { extractToken } from '../utils';
+import { extractAuth } from '../utils';
 
 export async function GET(request: Request | NextRequest) {
   // Obtain token from request headers
-  const token = await extractToken(request);
+  const { error, walletAddress } = await extractAuth(request);
 
-  if (!token) {
+  if (error || !walletAddress) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  const user = await getUserFromToken(token);
+  const user = await getUserFromWalletAddress(walletAddress);
   if (!user) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   }

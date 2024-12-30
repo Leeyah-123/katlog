@@ -4,7 +4,7 @@ import Watchlist from '@/models/Watchlist';
 import { NextResponse } from 'next/server';
 import {
   addAddressToKVStore,
-  extractToken,
+  extractAuth,
   removeAddressFromKVStore,
 } from '../../utils';
 
@@ -12,13 +12,13 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ address: string }> }
 ) {
-  const token = await extractToken(request);
+  const { error, walletAddress } = await extractAuth(request);
 
-  if (!token) {
+  if (error || !walletAddress) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const user = await authenticateUser(token);
+  const user = await authenticateUser(walletAddress);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -66,21 +66,17 @@ export async function PUT(
       }
     }
 
-    const result = await Watchlist.findOneAndUpdate(
-      {
-        userId: user._id,
-        'items.address': oldAddress,
-      },
-      {
-        $set: {
-          'items.$.address': updates.address || oldAddress,
-          'items.$.label': updates.label,
-          'items.$.emailNotifications': updates.emailNotifications,
-        },
-      },
-      { new: true }
-    );
+    if (updates.emailNotifications && !user.email) {
+      return NextResponse.json(
+        { error: 'Update email in profile to enable email notifications' },
+        { status: 400 }
+      );
+    }
 
+    const result = await Watchlist.findOne({
+      userId: user._id,
+      'items.address': oldAddress,
+    });
     if (!result) {
       return NextResponse.json(
         { error: 'Watchlist item not found' },
@@ -95,10 +91,28 @@ export async function PUT(
       ]);
     }
 
+    await Watchlist.findOneAndUpdate(
+      {
+        userId: user._id,
+        'items.address': oldAddress,
+      },
+      {
+        $set: {
+          'items.$.address': updates.address || oldAddress,
+          'items.$.label': updates.label,
+          'items.$.emailNotifications': updates.emailNotifications,
+        },
+      },
+      { new: true }
+    ).catch(async () => {
+      await removeAddressFromKVStore(updates.address);
+      throw new Error();
+    });
+
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json(
-      { error: 'Failed to update watchlist item' },
+      { error: 'An unexpected error occurred' },
       { status: 500 }
     );
   }
@@ -108,14 +122,15 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ address: string }> }
 ) {
-  const token = await extractToken(request);
   const address = (await params).address;
 
-  if (!token) {
+  const { error, walletAddress } = await extractAuth(request);
+
+  if (error || !walletAddress) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const user = await authenticateUser(token);
+  const user = await authenticateUser(walletAddress);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -128,13 +143,15 @@ export async function DELETE(
       { $pull: { items: { address } } }
     );
 
-    await removeAddressFromKVStore(address);
+    await removeAddressFromKVStore(address).catch((error) => {
+      console.log('Unable to remove address from KV store', error);
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.log('Unable to delete watchlist item', error);
     return NextResponse.json(
-      { error: 'Failed to delete watchlist item' },
+      { error: 'An unexpected error occurred' },
       { status: 500 }
     );
   }

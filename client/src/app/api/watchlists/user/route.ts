@@ -1,19 +1,21 @@
-import { authenticateUser } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Watchlist from '@/models/Watchlist';
-import { NextResponse } from 'next/server';
-import { extractToken } from '../../utils';
+import { extractAuth } from '../../utils';
+import { getUserFromWalletAddress } from '@/lib/auth';
 
 export async function GET(request: Request) {
-  const token = await extractToken(request);
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = await extractAuth(request);
+  if ('error' in auth) {
+    return NextResponse.json({ error: auth.error }, { status: 401 });
   }
 
-  const user = await authenticateUser(token);
+  const user = await getUserFromWalletAddress(auth.walletAddress);
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Invalid wallet address' },
+      { status: 401 }
+    );
   }
 
   await dbConnect();
