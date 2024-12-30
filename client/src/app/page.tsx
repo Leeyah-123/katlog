@@ -71,7 +71,7 @@ export default function LandingPage() {
           transition={{ delay: 0.4, duration: 0.6 }}
         >
           <Link
-            href="/signup"
+            href="/watchlist"
             className={buttonVariants({
               className:
                 'bg-purple-500 hover:bg-purple-600 text-white px-8 py-6 rounded-full text-lg',
@@ -118,7 +118,7 @@ export default function LandingPage() {
           management needs.
         </p>
         <Link
-          href="/signup"
+          href="/watchlist"
           className={buttonVariants({
             className:
               'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-6 rounded-full text-lg',

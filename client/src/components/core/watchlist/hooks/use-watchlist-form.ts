@@ -61,7 +61,7 @@ export const useWatchlistForm = ({
       Notify.success('Address added to watchlist');
       return true;
     } else {
-      Notify.failure(result.error || 'Failed to add address to watchlist');
+      Notify.failure(result.error || 'An unexpected error occurred');
       return false;
     }
   };

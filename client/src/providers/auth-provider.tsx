@@ -1,139 +1,110 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { Notify } from 'notiflix';
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import bs58 from 'bs58';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 interface AuthContextType {
   userId: string | null;
+  walletAddress: string | null;
   email: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  checkAuth: () => Promise<boolean>;
+  setEmail: (email: string | null) => void;
+  isAuthenticated: boolean;
+  loading: boolean;
+  signMessage: () => Promise<string>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  userId: null,
+  walletAddress: null,
+  email: null,
+  setEmail: () => {},
+  isAuthenticated: false,
+  loading: false,
+  signMessage: async () => '',
+});
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { connected, publicKey, signMessage, connecting } = useWallet();
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
-  const router = useRouter();
-
-  const checkAuth = async () => {
-    try {
-      const res = await fetch('/api/user');
-      if (res.ok) {
-        const data = await res.json();
-        setUserId(data._id);
-        setEmail(data.email);
-        return true;
-      }
-      return false;
-    } catch {
-      return false;
-    }
-  };
-
-  const getUserId = async () => {
-    try {
-      const res = await fetch('/api/user');
-      if (res.ok) {
-        const data = await res.json();
-        return data._id;
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  };
-
-  const login = async (email: string, password: string) => {
-    try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        setEmail(email);
-        setUserId(await getUserId());
-        router.push('/watchlist');
-      } else {
-        const data = await response.json();
-        throw new Error(data.error || 'Login unsuccessful');
-      }
-    } catch (error) {
-      Notify.failure(
-        error instanceof Error ? error.message : 'An unexpected error occurred'
-      );
-      throw error;
-    }
-  };
-
-  const signup = async (email: string, password: string) => {
-    try {
-      const response = await fetch('/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        setEmail(email);
-        setUserId(await getUserId());
-        router.push('/watchlist');
-      } else {
-        const data = await response.json();
-        throw new Error(data.error || 'Signup unsuccessful');
-      }
-    } catch (error) {
-      Notify.failure(
-        error instanceof Error ? error.message : 'An unexpected error occurred'
-      );
-      throw error;
-    }
-  };
-
-  const logout = async () => {
-    try {
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        setEmail(null);
-        router.push('/login');
-      }
-    } catch {
-      Notify.failure('Logout failed');
-    }
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    if (connecting) return;
 
-  return (
-    <AuthContext.Provider
-      value={{ userId, email, login, signup, logout, checkAuth }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+    if (connected && publicKey) {
+      handleWalletConnect(publicKey.toBase58());
+    } else {
+      setWalletAddress(null);
+      setUserId(null);
+      setEmail(null);
+
+      setLoading(false);
+    }
+  }, [connecting, connected, publicKey]);
+
+  const handleWalletConnect = async (address: string) => {
+    // TODO: Better error handling
+    setLoading(true);
+    try {
+      const response = await fetch('/api/auth/wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: address }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setWalletAddress(address);
+        setUserId(data._id);
+        setEmail(data.email);
+      } else if (response.status === 404) {
+        // Create a new account for the wallet address
+        const createResponse = await fetch('/api/auth/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ walletAddress: address }),
+        });
+
+        const createData = await createResponse.json();
+
+        if (createResponse.ok) {
+          setWalletAddress(address);
+          setUserId(createData._id);
+          setEmail(createData.email);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to authenticate wallet:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignMessage = async () => {
+    if (!signMessage || !publicKey) throw new Error('Wallet not connected');
+
+    const message = new TextEncoder().encode(
+      `Authenticate with Katlog: ${Date.now()}`
+    );
+    const signature = await signMessage(message);
+    return bs58.encode(signature);
+  };
+
+  const value = {
+    walletAddress,
+    userId,
+    email,
+    setEmail,
+    isAuthenticated: connected,
+    loading,
+    signMessage: handleSignMessage,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
+export const useAuth = () => useContext(AuthContext);

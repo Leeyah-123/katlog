@@ -13,22 +13,6 @@ export const validateEmail = (email: string): ValidationResult => {
   return { valid: true };
 };
 
-export const validatePassword = (password: string): ValidationResult => {
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-  if (!password) {
-    return { valid: false, error: 'Password is required' };
-  }
-  if (!passwordRegex.test(password)) {
-    return {
-      valid: false,
-      error:
-        'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number',
-    };
-  }
-
-  return { valid: true };
-};
-
 export const validateAddress = (address: string): ValidationResult => {
   if (!address) {
     return { valid: false, error: 'Address is required' };

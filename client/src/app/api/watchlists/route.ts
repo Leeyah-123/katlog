@@ -2,7 +2,7 @@ import { authenticateUser } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Watchlist from '@/models/Watchlist';
 import { NextResponse } from 'next/server';
-import { addAddressToKVStore, extractToken } from '../utils';
+import { addAddressToKVStore, extractAuth } from '../utils';
 
 export async function GET() {
   await dbConnect();
@@ -19,13 +19,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const token = await extractToken(request);
+  const { error, walletAddress } = await extractAuth(request);
 
-  if (!token) {
+  if (error || !walletAddress) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const user = await authenticateUser(token);
+  const user = await authenticateUser(walletAddress);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -60,6 +60,13 @@ export async function POST(request: Request) {
     }
   }
 
+  if (emailNotifications && !user.email) {
+    return NextResponse.json(
+      { error: 'Update email in profile to enable email notifications' },
+      { status: 400 }
+    );
+  }
+
   try {
     await Watchlist.findOneAndUpdate(
       { userId: user._id },
@@ -69,12 +76,12 @@ export async function POST(request: Request) {
 
     await addAddressToKVStore(address);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ address, label, emailNotifications });
   } catch (error) {
     console.error('Error adding account to watchlist', error);
 
     return NextResponse.json(
-      { error: 'Failed to add address to watchlist' },
+      { error: 'An unexpected error occurred' },
       { status: 500 }
     );
   }

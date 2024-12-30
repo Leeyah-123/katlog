@@ -30,7 +30,7 @@ export const useWatchlistTable = ({
 
   // Initialize notification states from watchlist
   useEffect(() => {
-    const states = watchlist.reduce(
+    const states = watchlist?.reduce(
       (acc, item) => ({
         ...acc,
         [item.address]: item.emailNotifications,
@@ -92,7 +92,7 @@ export const useWatchlistTable = ({
       'Yes',
       'No',
       async () => {
-        const success = await onUpdate(editingItem.address, {
+        const { success, error } = await onUpdate(editingItem.address, {
           address: editedAddress,
           label: editedLabel,
         });
@@ -100,6 +100,8 @@ export const useWatchlistTable = ({
         if (success) {
           Notify.success('Watchlist item updated successfully');
           setEditingItem(null);
+        } else {
+          Notify.failure(error || 'An unexpected error occurred');
         }
       },
       () => {
@@ -123,7 +125,7 @@ export const useWatchlistTable = ({
         [address]: enabled,
       }));
 
-      const success = await onUpdate(address, {
+      const { success, error } = await onUpdate(address, {
         emailNotifications: enabled,
       });
 
@@ -137,7 +139,7 @@ export const useWatchlistTable = ({
           ...prev,
           [address]: previousState,
         }));
-        Notify.failure('Failed to update notifications settings');
+        Notify.failure(error || 'Failed to update notifications settings');
       }
     } catch {
       // Revert on error
@@ -156,9 +158,11 @@ export const useWatchlistTable = ({
       'Yes',
       'No',
       async () => {
-        const success = await onRemove(address);
+        const { success, error } = await onRemove(address);
         if (success) {
           Notify.success('Address removed from watchlist');
+        } else {
+          Notify.failure(error || 'An unexpected error occurred');
         }
       },
       () => {

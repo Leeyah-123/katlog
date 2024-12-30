@@ -1,12 +1,19 @@
 'use client';
 
 import { WatchlistItem } from '@/types';
-import { useRouter } from 'next/navigation';
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { useAuth } from './auth-provider';
 
 type WatchlistContextType = {
   watchlist: WatchlistItem[] | null;
   loading: boolean;
+  error: string | null;
   addToWatchlist: (
     address: string,
     label: string,
@@ -27,118 +34,181 @@ const WatchlistContext = createContext<WatchlistContextType | undefined>(
 );
 
 export function WatchlistProvider({ children }: { children: React.ReactNode }) {
+  const { walletAddress, isAuthenticated } = useAuth();
   const [watchlist, setWatchlist] = useState<WatchlistItem[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchWatchlist = useCallback(async () => {
+    if (!isAuthenticated || !walletAddress) {
+      setWatchlist(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      const response = await fetch('/api/watchlists/user');
-      if (response.status === 401) {
-        router.push('/login');
-        return;
+      const response = await fetch('/api/watchlists/user', {
+        headers: {
+          'x-wallet-address': walletAddress,
+        },
+      });
+
+      if (!response.ok) {
+        const { error } = await response.json();
+        throw new Error(error || '');
       }
-      if (response.ok) {
-        const data = await response.json();
-        setWatchlist(data);
-      }
+
+      const data = await response.json();
+      setWatchlist(data);
+    } catch (error) {
+      console.error('Error fetching watchlist:', error);
+
+      if (error instanceof Error) {
+        setError(
+          error.message ||
+            'An unexpected error occurred while fetching watchlist'
+        );
+      } else setError('An unexpected error occurred while fetching watchlist');
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [isAuthenticated, walletAddress]);
 
-  const addToWatchlist = async (
-    address: string,
-    label: string,
-    emailNotifications: boolean
-  ): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const response = await fetch('/api/watchlists', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address, label, emailNotifications }),
-      });
+  useEffect(() => {
+    fetchWatchlist();
+  }, [fetchWatchlist]);
 
-      if (response.status === 401) {
-        router.push('/login');
-        return { success: false, error: 'Unauthorized' };
+  const addToWatchlist = useCallback(
+    async (
+      address: string,
+      label: string,
+      enableEmailNotifications: boolean
+    ) => {
+      if (!walletAddress) {
+        return { success: false, error: 'Wallet not connected' };
       }
 
-      if (response.ok) {
-        await fetchWatchlist();
+      setLoading(true);
+
+      try {
+        const response = await fetch('/api/watchlists', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-wallet-address': walletAddress,
+          },
+          body: JSON.stringify({
+            address,
+            label,
+            emailNotifications: enableEmailNotifications,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          return {
+            success: false,
+            error: error.error || 'An unexpected error occurred',
+          };
+        }
+
+        const data = await response.json();
+        setWatchlist((prev) => [...(prev || []), data]);
         return { success: true };
+      } catch (error) {
+        console.error('Error adding to watchlist:', error);
+        return {
+          success: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'An unexpected error occurred',
+        };
+      } finally {
+        setLoading(false);
       }
+    },
+    [walletAddress]
+  );
 
-      const data = await response.json();
-      return { success: false, error: data.error };
-    } catch {
-      return { success: false, error: 'An unexpected error occurred' };
-    }
-  };
+  const removeFromWatchlist = useCallback(
+    async (address: string) => {
+      if (!walletAddress)
+        return { success: false, error: 'Wallet not connected' };
 
-  const removeFromWatchlist = async (
-    address: string
-  ): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const response = await fetch(`/api/watchlists/${address}`, {
-        method: 'DELETE',
-      });
-      if (response.status === 401) {
-        router.push('/login');
-        return { success: false, error: 'Unauthorized' };
+      setLoading(true);
+
+      try {
+        const response = await fetch(`/api/watchlists/${address}`, {
+          method: 'DELETE',
+          headers: {
+            'x-wallet-address': walletAddress,
+          },
+        });
+
+        if (response.ok) {
+          await fetchWatchlist();
+          return { success: true };
+        }
+
+        const data = await response.json();
+        return { success: false, error: data.error };
+      } catch {
+        return { success: false, error: 'An unexpected error occurred' };
+      } finally {
+        setLoading(false);
       }
-      if (response.ok) {
-        await fetchWatchlist();
-        return { success: true };
+    },
+    [walletAddress, fetchWatchlist]
+  );
+
+  const updateWatchlistItem = useCallback(
+    async (address: string, updates: Partial<WatchlistItem>) => {
+      if (!walletAddress)
+        return { success: false, error: 'Wallet not connected' };
+
+      setLoading(true);
+
+      try {
+        const response = await fetch(`/api/watchlists/${address}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-wallet-address': walletAddress,
+          },
+          body: JSON.stringify(updates),
+        });
+
+        if (response.ok) {
+          await fetchWatchlist();
+          return { success: true };
+        }
+
+        const data = await response.json();
+        return { success: false, error: data.error };
+      } catch {
+        return { success: false, error: 'An unexpected error occurred' };
+      } finally {
+        setLoading(false);
       }
+    },
+    [walletAddress, fetchWatchlist]
+  );
 
-      const data = await response.json();
-      return { success: false, error: data.error };
-    } catch {
-      return { success: false, error: 'An unexpected error occurred' };
-    }
-  };
-
-  const updateWatchlistItem = async (
-    oldAddress: string,
-    item: Partial<WatchlistItem>
-  ): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const response = await fetch(`/api/watchlists/${oldAddress}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item),
-      });
-
-      if (response.status === 401) {
-        router.push('/login');
-        return { success: false, error: 'Unauthorized' };
-      }
-
-      if (response.ok) {
-        await fetchWatchlist();
-        return { success: true };
-      }
-
-      const data = await response.json();
-      return { success: false, error: data.error };
-    } catch {
-      return { success: false, error: 'An unexpected error occurred' };
-    }
+  const value = {
+    watchlist,
+    loading,
+    error,
+    addToWatchlist,
+    removeFromWatchlist,
+    updateWatchlistItem,
+    fetchWatchlist,
   };
 
   return (
-    <WatchlistContext.Provider
-      value={{
-        watchlist: watchlist,
-        loading,
-        addToWatchlist,
-        removeFromWatchlist,
-        updateWatchlistItem,
-        fetchWatchlist,
-      }}
-    >
+    <WatchlistContext.Provider value={value}>
       {children}
     </WatchlistContext.Provider>
   );
