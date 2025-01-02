@@ -14,8 +14,8 @@ const server = createServer(app);
 
 // Middlewares
 app.use(cors({ origin: config.mainServerUrl }));
-app.use(express.json({ limit: '1gb' }));
-app.use(express.urlencoded({ limit: '1gb', extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(helmet());
 
 // Initialize WebSocket service with HTTP server
