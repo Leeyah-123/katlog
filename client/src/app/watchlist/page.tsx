@@ -1,7 +1,7 @@
 import WatchlistManager from '@/components/core/watchlist/watchlist-manager';
-import { Metadata } from 'next';
-import * as motion from 'motion/react-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import * as motion from 'motion/react-client';
+import { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Watchlist | Katlog',

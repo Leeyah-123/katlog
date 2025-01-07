@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectionStatus } from '@/components/shared/connection-status';
 import { NotificationPrompt } from '@/components/shared/notification-prompt';
 import TransactionsTable from '@/components/shared/transactions-table';
 import { useAudioNotification } from '@/hooks/use-audio-notification';
@@ -11,7 +12,7 @@ interface AccountActionsProps {
 }
 
 export default function AccountActions({ address }: AccountActionsProps) {
-  const { transactions } = useWebSocketConnection();
+  const { transactions, connectionStatus } = useWebSocketConnection();
   const accountTransactions = transactions.get(address);
   const prevTransactionCountRef = useRef(0);
 
@@ -34,6 +35,7 @@ export default function AccountActions({ address }: AccountActionsProps) {
 
   return (
     <>
+      <ConnectionStatus status={connectionStatus} />
       <audio ref={audioRef} src="/notification.mp3" className="hidden" />
       <NotificationPrompt
         open={showPermissionPrompt}

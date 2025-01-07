@@ -12,6 +12,7 @@ import { AddWatchlistForm } from './add-watchlist-form';
 import { WatchlistTable } from './watchlist-table';
 import { useAudioNotification } from '@/hooks/use-audio-notification';
 import { NotificationPrompt } from '@/components/shared/notification-prompt';
+import { ConnectionStatus } from '@/components/shared/connection-status';
 
 const getRecentTransactions = (
   transactions: Map<string, WatchlistAccountTransaction[]>
@@ -49,7 +50,7 @@ export default function WatchlistManager() {
     removeFromWatchlist,
     fetchWatchlist,
   } = useWatchlist();
-  const { transactions } = useWebSocketConnection();
+  const { transactions, connectionStatus } = useWebSocketConnection();
   const prevTransactionCountRef = useRef(0);
   const recentTransactions = useMemo(
     () => getRecentTransactions(transactions),
@@ -86,6 +87,7 @@ export default function WatchlistManager() {
 
   return (
     <div className="space-y-6">
+      <ConnectionStatus status={connectionStatus} />
       <audio ref={audioRef} src="/notification.mp3" className="hidden" />
       <NotificationPrompt
         open={showPermissionPrompt}

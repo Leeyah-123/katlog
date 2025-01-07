@@ -16,13 +16,16 @@ export const useWebSocketConnection = () => {
   const [transactions, setTransactions] = useState<
     Map<string, WatchlistAccountTransaction[]>
   >(new Map());
+  const [connectionStatus, setConnectionStatus] = useState<
+    'connecting' | 'connected' | 'disconnected'
+  >('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectAttemptRef = useRef<number>(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>(undefined);
 
   const { watchlist, fetchWatchlist } = useWatchlist();
 
-  // Add retry counter map
+  // Retry counter map
   const retryCountRef = useRef<Map<string, number>>(new Map());
 
   // Calculate interval based on retry count
@@ -129,6 +132,7 @@ export const useWebSocketConnection = () => {
     ws.onopen = () => {
       console.log('Connected to WebSocket server');
       reconnectAttemptRef.current = 0; // Reset reconnection attempts
+      setConnectionStatus('connected');
     };
 
     ws.onmessage = (event) => {
@@ -189,6 +193,7 @@ export const useWebSocketConnection = () => {
         wasClean: event.wasClean,
       });
       scheduleReconnect();
+      setConnectionStatus('disconnected');
     };
 
     ws.onerror = (error) => {
@@ -239,5 +244,5 @@ export const useWebSocketConnection = () => {
     };
   }, [connect]);
 
-  return { transactions };
+  return { transactions, connectionStatus };
 };
