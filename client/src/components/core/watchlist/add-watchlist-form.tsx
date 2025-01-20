@@ -33,22 +33,6 @@ export const AddWatchlistForm = ({ onSubmit }: AddWatchlistFormProps) => {
         <div className="flex-1">
           <Input
             type="text"
-            placeholder="Address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className={cn(
-              'bg-white/5 border-white/10 text-white placeholder:text-gray-400 flex-1',
-              addressError && '!border-destructive'
-            )}
-          />
-          {addressError && (
-            <p className="text-destructive text-xs mt-1">{addressError}</p>
-          )}
-        </div>
-
-        <div className="flex-1">
-          <Input
-            type="text"
             placeholder="Label"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
@@ -59,6 +43,22 @@ export const AddWatchlistForm = ({ onSubmit }: AddWatchlistFormProps) => {
           />
           {labelError && (
             <p className="text-destructive text-xs mt-1">{labelError}</p>
+          )}
+        </div>
+
+        <div className="flex-1">
+          <Input
+            type="text"
+            placeholder="Address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className={cn(
+              'bg-white/5 border-white/10 text-white placeholder:text-gray-400 flex-1',
+              addressError && '!border-destructive'
+            )}
+          />
+          {addressError && (
+            <p className="text-destructive text-xs mt-1">{addressError}</p>
           )}
         </div>
         <Button
