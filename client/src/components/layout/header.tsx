@@ -2,11 +2,11 @@
 
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/providers/auth-provider';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { AnimatePresence } from 'motion/react';
 import * as motion from 'motion/react-client';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import ConnectButton from '../connect-button';
 
 export default function Header() {
   const { isAuthenticated } = useAuth();
@@ -68,10 +68,11 @@ export default function Header() {
                 >
                   Profile
                 </Link>
-                <WalletMultiButton />
+
+                <ConnectButton />
               </>
             ) : (
-              <WalletMultiButton />
+              <ConnectButton />
             )}
           </div>
 
@@ -121,7 +122,7 @@ export default function Header() {
                       aria-labelledby="mobile-menu"
                     >
                       <motion.div
-                        className="fixed right-0 top-0 h-max w-64 bg-gray-900 p-6 z-50"
+                        className="fixed right-0 top-0 h-max min-w-64 bg-gray-900 p-6 z-50"
                         initial="closed"
                         animate="open"
                         exit="closed"
@@ -154,7 +155,7 @@ export default function Header() {
                             Profile
                           </Link>
                           <div className="!w-full">
-                            <WalletMultiButton />
+                            <ConnectButton />
                           </div>
                         </div>
                       </motion.div>
@@ -163,7 +164,7 @@ export default function Header() {
                 </AnimatePresence>
               </>
             ) : (
-              <WalletMultiButton />
+              <ConnectButton />
             )}
           </div>
         </div>

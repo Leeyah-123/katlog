@@ -1,15 +1,15 @@
 'use client';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAppKitAccount } from '@reown/appkit/react';
 import { Eye, LineChart, Shield, Zap } from 'lucide-react';
 import * as motion from 'motion/react-client';
 import Link from 'next/link';
 
 export default function LandingPage() {
-  const { connect, connected } = useWallet();
+  const { isConnected } = useAppKitAccount();
 
   const features = [
     {
@@ -75,24 +75,15 @@ export default function LandingPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
         >
-          {connected ? (
-            <Link
-              href="/watchlist"
-              className={buttonVariants({
-                className:
-                  'bg-purple-500 hover:bg-purple-600 text-white px-8 py-6 rounded-full text-lg',
-              })}
-            >
-              Get Started
-            </Link>
-          ) : (
-            <Button
-              className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-6 rounded-full text-lg"
-              onClick={() => connect()}
-            >
-              Connect Wallet
-            </Button>
-          )}
+          <Link
+            href="/watchlist"
+            className={buttonVariants({
+              className:
+                'bg-purple-500 hover:bg-purple-600 text-white px-8 py-6 rounded-full text-lg',
+            })}
+          >
+            {isConnected ? 'Manage Watchlist' : 'Get Started'}
+          </Link>
         </motion.div>
       </div>
 
@@ -138,7 +129,7 @@ export default function LandingPage() {
               'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-6 rounded-full text-lg',
           })}
         >
-          Sign Up Now
+          {isConnected ? 'Manage Watchlist' : 'Get Started Now'}
         </Link>
       </motion.div>
     </div>
