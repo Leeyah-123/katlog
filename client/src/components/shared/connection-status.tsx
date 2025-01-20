@@ -25,7 +25,7 @@ export function ConnectionStatus({ status }: ConnectionStatusProps) {
 
   return (
     <AnimatePresence>
-      {(true || showConnected) && (
+      {(status === 'connecting' || showConnected) && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
