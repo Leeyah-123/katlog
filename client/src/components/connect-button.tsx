@@ -18,7 +18,7 @@ const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID!;
 const reownMetadata = {
   name: 'Katlog',
   description: 'Monitor account actions on Solana.',
-  url: process.env.NEXT_PUBLIC_APP_URL!,
+  url: typeof window !== 'undefined' ? window.location.origin : '',
   icons: ['https://avatars.githubusercontent.com/u/179229932'],
 };
 
