@@ -33,13 +33,13 @@ createAppKit({
   },
   projectId,
   features: {
-    email: false,
-    socials: [],
+    email: true,
+    socials: ['google', 'github', 'x'],
     analytics: true,
-    history: false,
-    onramp: false,
-    receive: false,
-    send: false,
+    history: true,
+    onramp: true,
+    receive: true,
+    send: true,
   },
 });
 
