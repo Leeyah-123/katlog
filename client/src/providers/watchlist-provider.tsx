@@ -1,6 +1,6 @@
 'use client';
 
-import { WatchlistItem } from '@/types';
+import { NETWORKS, WatchlistItem } from '@/types';
 import React, {
   createContext,
   useCallback,
@@ -17,7 +17,8 @@ type WatchlistContextType = {
   addToWatchlist: (
     address: string,
     label: string,
-    emailNotifications: boolean
+    emailNotifications: boolean,
+    watchedNetworks: string[]
   ) => Promise<{ success: boolean; error?: string }>;
   removeFromWatchlist: (
     address: string
@@ -85,7 +86,8 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     async (
       address: string,
       label: string,
-      enableEmailNotifications: boolean
+      enableEmailNotifications: boolean,
+      watchedNetworks: string[]
     ) => {
       if (!walletAddress) {
         return { success: false, error: 'Wallet not connected' };
@@ -104,6 +106,7 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
             address,
             label,
             emailNotifications: enableEmailNotifications,
+            watchedNetworks,
           }),
         });
 
@@ -169,6 +172,19 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
     async (address: string, updates: Partial<WatchlistItem>) => {
       if (!walletAddress)
         return { success: false, error: 'Wallet not connected' };
+
+      // Validate networks if they're being updated
+      if (updates.watchedNetworks) {
+        const invalidNetwork = updates.watchedNetworks.find(
+          (network) => !NETWORKS.includes(network)
+        );
+        if (invalidNetwork) {
+          return {
+            success: false,
+            error: `Invalid network: ${invalidNetwork}`,
+          };
+        }
+      }
 
       setLoading(true);
 

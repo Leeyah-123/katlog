@@ -32,6 +32,8 @@ export const WatchlistTable = ({
     handleSave,
     handleNotificationToggle,
     handleRemove,
+    editedWatchedNetworks,
+    setEditedWatchedNetworks,
   } = useWatchlistTable({ watchlist, onUpdate, onRemove });
 
   return watchlist.length > 0 ? (
@@ -46,6 +48,7 @@ export const WatchlistTable = ({
             ? {
                 address: editedAddress,
                 label: editedLabel,
+                watchedNetworks: editedWatchedNetworks,
                 addressError: editAddressError,
                 labelError: editLabelError,
               }
@@ -61,6 +64,7 @@ export const WatchlistTable = ({
         }
         onEditAddressChange={setEditedAddress}
         onEditLabelChange={setEditedLabel}
+        onEditWatchedNetworksChange={setEditedWatchedNetworks}
       />
     ))
   ) : (

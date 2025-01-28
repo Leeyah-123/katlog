@@ -8,11 +8,13 @@ interface UseWatchlistFormProps {
   onSubmit: (
     address: string,
     label: string,
-    emailNotifications: boolean
+    emailNotifications: boolean,
+    watchedNetworks: string[]
   ) => Promise<{ success: boolean; error?: string }>;
   initialAddress?: string;
   initialLabel?: string;
   initialNotifications?: boolean;
+  initialWatchedNetworks?: string[];
 }
 
 export const useWatchlistForm = ({
@@ -20,6 +22,7 @@ export const useWatchlistForm = ({
   initialAddress = '',
   initialLabel = '',
   initialNotifications = false,
+  initialWatchedNetworks = [],
 }: UseWatchlistFormProps) => {
   const [address, setAddress] = useState(initialAddress);
   const [label, setLabel] = useState(initialLabel);
@@ -27,12 +30,16 @@ export const useWatchlistForm = ({
     useState(initialNotifications);
   const [addressError, setAddressError] = useState('');
   const [labelError, setLabelError] = useState('');
+  const [watchedNetworks, setWatchedNetworks] = useState(
+    initialWatchedNetworks
+  );
 
   const resetForm = () => {
     setAddress('');
     setLabel('');
     setAddressError('');
     setLabelError('');
+    setWatchedNetworks([]);
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -55,7 +62,12 @@ export const useWatchlistForm = ({
     setAddressError('');
     setLabelError('');
 
-    const result = await onSubmit(address, label, emailNotifications);
+    const result = await onSubmit(
+      address,
+      label,
+      emailNotifications,
+      watchedNetworks || []
+    );
     if (result.success) {
       resetForm();
       Notify.success('Address added to watchlist');
@@ -77,5 +89,7 @@ export const useWatchlistForm = ({
     labelError,
     handleSubmit,
     resetForm,
+    watchedNetworks,
+    setWatchedNetworks,
   };
 };

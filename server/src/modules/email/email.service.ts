@@ -34,7 +34,7 @@ export class EmailService {
       await this.transporter.sendMail({
         from: `Katlog <${config.email.from}>`,
         to: email,
-        subject: `Transaction Alert for '${accountLabel}'`,
+        subject: `${transaction.network} Transaction Alert for '${accountLabel}'`,
         html: this.emailTemplate(accountLabel, account, transaction),
       });
 
@@ -133,6 +133,10 @@ export class EmailService {
           <div class="detail-row">
             <span class="detail-label">Action:</span>
             <span class="detail-value">${transaction.action}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Network:</span>
+            <span class="detail-value">${transaction.network}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Timestamp:</span>

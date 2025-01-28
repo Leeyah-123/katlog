@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { NETWORKS } from '@/types';
 
 interface AddWatchlistFormProps {
   onSubmit: (
     address: string,
     label: string,
-    emailNotifications: boolean
+    emailNotifications: boolean,
+    watchedNetworks: string[]
   ) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -22,6 +24,8 @@ export const AddWatchlistForm = ({ onSubmit }: AddWatchlistFormProps) => {
     setLabel,
     emailNotifications,
     setEmailNotifications,
+    watchedNetworks,
+    setWatchedNetworks,
     addressError,
     labelError,
     handleSubmit,
@@ -81,6 +85,34 @@ export const AddWatchlistForm = ({ onSubmit }: AddWatchlistFormProps) => {
         <label htmlFor="notifications" className="text-gray-300">
           Enable email notifications for new addresses by default
         </label>
+      </div>
+
+      <div className="flex items-center gap-4 mt-4">
+        <span className="text-sm text-gray-300">Watch on networks:</span>
+        {NETWORKS.map((network) => (
+          <div key={network} className="flex items-center space-x-2">
+            <Checkbox
+              id={`network-${network}`}
+              className="border-white/30"
+              checked={watchedNetworks.includes(network)}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  setWatchedNetworks([...watchedNetworks, network]);
+                } else {
+                  setWatchedNetworks(
+                    watchedNetworks.filter((n) => n !== network)
+                  );
+                }
+              }}
+            />
+            <label
+              htmlFor={`network-${network}`}
+              className="text-sm text-gray-300"
+            >
+              {network}
+            </label>
+          </div>
+        ))}
       </div>
     </form>
   );

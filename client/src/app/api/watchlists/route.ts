@@ -1,6 +1,7 @@
 import { authenticateUser } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Watchlist from '@/models/Watchlist';
+import { NETWORKS, WatchlistItem } from '@/types';
 import { NextResponse } from 'next/server';
 import { addAddressToKVStore, extractAuth } from '../utils';
 
@@ -30,9 +31,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { address, label, emailNotifications } = await request.json();
+  const {
+    address,
+    label,
+    emailNotifications,
+    watchedNetworks,
+  }: Pick<
+    WatchlistItem,
+    'address' | 'label' | 'emailNotifications' | 'watchedNetworks'
+  > = await request.json();
 
   await dbConnect();
+
+  // Validate networks to watch to make sure they're valid networks (if provided)
+  if (watchedNetworks) {
+    const invalidNetwork = watchedNetworks.find(
+      (network) => !NETWORKS.includes(network)
+    );
+    if (invalidNetwork) {
+      return NextResponse.json(
+        { error: `Invalid network: ${invalidNetwork}` },
+        { status: 400 }
+      );
+    }
+  }
 
   // Check for existing address or label
   const existingWatchlist = await Watchlist.findOne({ userId: user._id });
@@ -74,7 +96,7 @@ export async function POST(request: Request) {
       { upsert: true, new: true }
     );
 
-    await addAddressToKVStore(address);
+    await addAddressToKVStore(address, watchedNetworks);
 
     return NextResponse.json({ address, label, emailNotifications });
   } catch (error) {

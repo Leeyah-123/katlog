@@ -1,3 +1,6 @@
+import { Network } from '@/types';
+import axios from 'axios';
+
 export const extractAuth = async (req: Request) => {
   const walletAddress = req.headers.get('x-wallet-address');
   if (!walletAddress) {
@@ -7,59 +10,93 @@ export const extractAuth = async (req: Request) => {
   return { walletAddress };
 };
 
+interface WatchedAddress {
+  address: string;
+  networks: string[];
+}
+
 const getWatchedAddresses = async () => {
-  const response = await fetch(
-    'https://api.quicknode.com/kv/rest/v1/lists/watchlist_addresses',
+  const response = await axios.get(
+    'https://api.quicknode.com/kv/rest/v1/sets/watchlist_addresses',
     {
-      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.QUICKNODE_API_KEY!,
       },
     }
   );
-  const data = await response.json();
-  return data.data.items;
+  return JSON.parse(response.data.data.value || '[]') as WatchedAddress[];
 };
 
-export const addAddressToKVStore = async (address: string) => {
+export const addAddressToKVStore = async (
+  address: string,
+  networks: Network[]
+) => {
   const watchedAddresses = await getWatchedAddresses();
-
-  const uniqueAddresses = new Set([...watchedAddresses, address]);
-
-  await fetch('https://api.quicknode.com/kv/rest/v1/lists', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.QUICKNODE_API_KEY!,
-    },
-    body: JSON.stringify({
-      key: 'watchlist_addresses',
-      items: [...uniqueAddresses],
-    }),
-  });
-
-  return [...uniqueAddresses];
-};
-
-export const removeAddressFromKVStore = async (address: string) => {
-  const watchedAddresses = await getWatchedAddresses();
-
-  const filteredAddresses = watchedAddresses.filter(
-    (item: string) => item !== address
+  const existingIndex = watchedAddresses.findIndex(
+    (item) => item.address === address
   );
 
-  await fetch('https://api.quicknode.com/kv/rest/v1/lists', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.QUICKNODE_API_KEY!,
-    },
-    body: JSON.stringify({
-      key: 'watchlist_addresses',
-      items: [...filteredAddresses],
-    }),
-  });
+  if (existingIndex >= 0) {
+    watchedAddresses[existingIndex].networks = networks;
+  } else {
+    watchedAddresses.push({ address, networks });
+  }
 
-  return filteredAddresses;
+  await axios.post(
+    'https://api.quicknode.com/kv/rest/v1/sets',
+    {
+      key: 'watchlist_addresses',
+      value: JSON.stringify(watchedAddresses),
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.QUICKNODE_API_KEY!,
+      },
+    }
+  );
+
+  return watchedAddresses;
+};
+
+export const removeAddressFromKVStore = async (
+  address: string,
+  network?: string
+) => {
+  const watchedAddresses = await getWatchedAddresses();
+  const existingIndex = watchedAddresses.findIndex(
+    (item) => item.address === address
+  );
+
+  if (existingIndex === -1) return watchedAddresses;
+
+  if (network) {
+    const networks = watchedAddresses[existingIndex].networks.filter(
+      (net) => net !== network
+    );
+    if (networks.length > 0) {
+      watchedAddresses[existingIndex].networks = networks;
+    } else {
+      watchedAddresses.splice(existingIndex, 1);
+    }
+  } else {
+    watchedAddresses.splice(existingIndex, 1);
+  }
+
+  await axios.post(
+    'https://api.quicknode.com/kv/rest/v1/sets',
+    {
+      key: 'watchlist_addresses',
+      value: JSON.stringify(watchedAddresses),
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.QUICKNODE_API_KEY!,
+      },
+    }
+  );
+
+  return watchedAddresses;
 };

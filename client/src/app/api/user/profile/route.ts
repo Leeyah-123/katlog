@@ -12,10 +12,14 @@ export async function GET(request: Request) {
   await dbConnect();
   const user = await User.findOne({ walletAddress });
 
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   return NextResponse.json(user);
 }
 
-export async function POST(request: Request) {
+export async function PATCH(request: Request) {
   const { walletAddress } = await extractAuth(request);
   if (!walletAddress) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

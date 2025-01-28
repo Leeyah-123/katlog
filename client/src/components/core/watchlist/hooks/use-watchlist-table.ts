@@ -1,6 +1,6 @@
 'use client';
 
-import { WatchlistItem } from '@/types';
+import { Network, WatchlistItem } from '@/types';
 import { validateAddress, validateLabel } from '@/utils/validation';
 import { Confirm, Notify } from 'notiflix';
 import { useEffect, useState } from 'react';
@@ -27,6 +27,9 @@ export const useWatchlistTable = ({
   const [notificationStates, setNotificationStates] = useState<
     Record<string, boolean>
   >({});
+  const [editedWatchedNetworks, setEditedWatchedNetworks] = useState<Network[]>(
+    []
+  );
 
   // Initialize notification states from watchlist
   useEffect(() => {
@@ -44,6 +47,7 @@ export const useWatchlistTable = ({
     setEditingItem(item);
     setEditedAddress(item.address);
     setEditedLabel(item.label);
+    setEditedWatchedNetworks(item.watchedNetworks || []);
     setEditAddressError('');
     setEditLabelError('');
   };
@@ -52,6 +56,7 @@ export const useWatchlistTable = ({
     setEditingItem(null);
     setEditedAddress('');
     setEditedLabel('');
+    setEditedWatchedNetworks([]);
     setEditAddressError('');
     setEditLabelError('');
   };
@@ -59,10 +64,12 @@ export const useWatchlistTable = ({
   const handleSave = async () => {
     if (!editingItem) return;
 
-    // Do nothing if no change was made
+    // Do nothing if no changes were made
     if (
       editedAddress === editingItem.address &&
-      editedLabel === editingItem.label
+      editedLabel === editingItem.label &&
+      JSON.stringify(editedWatchedNetworks) ===
+        JSON.stringify(editingItem.watchedNetworks)
     ) {
       setEditingItem(null);
       return;
@@ -95,6 +102,7 @@ export const useWatchlistTable = ({
         const { success, error } = await onUpdate(editingItem.address, {
           address: editedAddress,
           label: editedLabel,
+          watchedNetworks: editedWatchedNetworks,
         });
 
         if (success) {
@@ -185,5 +193,7 @@ export const useWatchlistTable = ({
     handleSave,
     handleNotificationToggle,
     handleRemove,
+    editedWatchedNetworks,
+    setEditedWatchedNetworks,
   };
 };

@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -9,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { WatchlistAccountTransaction } from '@/hooks/use-websocket-connection';
-import { cn } from '@/lib/utils';
+import { cn, getTransactionStatusColor } from '@/lib/utils';
 import { AnimatePresence } from 'motion/react';
 import * as motion from 'motion/react-client';
 import { Account } from '../account';
@@ -41,6 +42,7 @@ export default function TransactionsTable({
             <TableHead className="text-purple-100/60">Amount</TableHead>
             <TableHead className="text-purple-100/60">Action</TableHead>
             <TableHead className="text-purple-100/60">Timestamp</TableHead>
+            <TableHead className="text-purple-100/60">Network</TableHead>
             <TableHead className="text-purple-100/60">Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -102,11 +104,13 @@ export default function TransactionsTable({
                   {new Date(tx.action.timestamp).toLocaleString()}
                 </TableCell>
                 <TableCell>
+                  <Badge variant="default">{tx.action.network}</Badge>
+                </TableCell>
+                <TableCell>
                   <span
                     className={cn(
-                      'inline-flex px-2 py-1 rounded-full bg-blue-500/60 text-purple-100/60 text-sm',
-                      tx.action.status === 'confirmed' && 'bg-green-400/60',
-                      tx.action.status === 'finalized' && 'bg-green-500/60'
+                      'inline-flex px-2 py-1 rounded-full text-sm',
+                      getTransactionStatusColor(tx.action.status || 'processed')
                     )}
                   >
                     {tx.action.status}

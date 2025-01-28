@@ -1,7 +1,7 @@
 'use client';
 
 import { SolanaAdapter } from '@reown/appkit-adapter-solana/react';
-import { solanaDevnet } from '@reown/appkit/networks';
+import { solana, solanaDevnet, solanaTestnet } from '@reown/appkit/networks';
 import { createAppKit } from '@reown/appkit/react';
 import {
   PhantomWalletAdapter,
@@ -25,7 +25,7 @@ const reownMetadata = {
 // Create modal
 createAppKit({
   adapters: [solanaWeb3JsAdapter],
-  networks: [solanaDevnet],
+  networks: [solana, solanaDevnet, solanaTestnet],
   metadata: reownMetadata,
   themeVariables: {
     '--w3m-accent': '#512da8',
