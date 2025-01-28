@@ -32,7 +32,7 @@ export function ProfileForm({ initialEmail }: ProfileFormProps) {
       }
 
       const res = await fetch('/api/user/profile', {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'x-wallet-address': walletAddress || '',

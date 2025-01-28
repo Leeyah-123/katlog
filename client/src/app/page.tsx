@@ -1,6 +1,5 @@
 'use client';
 
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAppKitAccount } from '@reown/appkit/react';
@@ -39,12 +38,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen max-w-7xl mx-auto px-6 py-20">
-      <Alert className="mb-8 border-yellow-500/50 bg-yellow-500/10">
-        <AlertDescription className="text-yellow-300">
-          🚧 Currently live on Solana Devnet only. Mainnet support coming soon!
-        </AlertDescription>
-      </Alert>
-
       <div className="text-center mb-20">
         <motion.h2
           className="text-5xl md:text-6xl font-bold text-white mb-6"

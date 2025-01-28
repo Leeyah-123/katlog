@@ -31,28 +31,25 @@ export class WatchlistService {
     }[] = [];
 
     for (const watchlist of watchlists) {
-      const watchedAddresses = watchlist.items
-        .filter((item) => item.emailNotifications)
-        .map((item) => item.address);
-      if (watchedAddresses.includes(transaction.from)) {
-        notifyUsers.push({
-          userId: watchlist.userId,
-          account: transaction.from,
-          accountLabel: watchlist.items.find(
-            (item) => item.address === transaction.from
-          )?.label!,
-        });
-      }
+      const watchedItems = watchlist.items.filter(
+        (item) => item.emailNotifications
+      );
 
-      if (watchedAddresses.includes(transaction.to)) {
-        notifyUsers.push({
-          userId: watchlist.userId,
-          account: transaction.to,
-          accountLabel: watchlist.items.find(
-            (item) => item.address === transaction.to
-          )?.label!,
-        });
-      }
+      [transaction.from, transaction.to].forEach((address) => {
+        const watchedItem = watchedItems.find(
+          (item) =>
+            item.address === address &&
+            item.watchedNetworks.includes(transaction.network)
+        );
+
+        if (watchedItem) {
+          notifyUsers.push({
+            userId: watchlist.userId,
+            account: address,
+            accountLabel: watchedItem.label!,
+          });
+        }
+      });
     }
 
     return notifyUsers;

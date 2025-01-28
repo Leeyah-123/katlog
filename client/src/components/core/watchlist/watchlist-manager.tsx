@@ -1,6 +1,9 @@
 'use client';
 
+import { ConnectionStatus } from '@/components/shared/connection-status';
+import { NotificationPrompt } from '@/components/shared/notification-prompt';
 import TransactionsTable from '@/components/shared/transactions-table';
+import { useAudioNotification } from '@/hooks/use-audio-notification';
 import {
   useWebSocketConnection,
   WatchlistAccountTransaction,
@@ -10,9 +13,6 @@ import { Loading } from 'notiflix';
 import { useEffect, useMemo, useRef } from 'react';
 import { AddWatchlistForm } from './add-watchlist-form';
 import { WatchlistTable } from './watchlist-table';
-import { useAudioNotification } from '@/hooks/use-audio-notification';
-import { NotificationPrompt } from '@/components/shared/notification-prompt';
-import { ConnectionStatus } from '@/components/shared/connection-status';
 
 const getRecentTransactions = (
   transactions: Map<string, WatchlistAccountTransaction[]>

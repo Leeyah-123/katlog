@@ -1,6 +1,7 @@
 import { authenticateUser } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
-import Watchlist from '@/models/Watchlist';
+import Watchlist, { WatchlistType } from '@/models/Watchlist';
+import { NETWORKS, WatchlistItem } from '@/types';
 import { NextResponse } from 'next/server';
 import {
   addAddressToKVStore,
@@ -35,7 +36,12 @@ export async function PUT(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const updates = await request.json();
+  const updates: Partial<
+    Pick<
+      WatchlistItem,
+      'address' | 'label' | 'emailNotifications' | 'watchedNetworks'
+    >
+  > = await request.json();
   const oldAddress = (await params).address;
 
   await dbConnect();
@@ -53,7 +59,7 @@ export async function PUT(
     if (updates.address && updates.address !== oldAddress) {
       const addressExists = watchlist.items.some(
         (item: { address: string }) =>
-          item.address.toLowerCase() === updates.address.toLowerCase() &&
+          item.address.toLowerCase() === updates.address!.toLowerCase() &&
           item.address.toLowerCase() !== oldAddress.toLowerCase()
       );
       if (addressExists) {
@@ -67,7 +73,7 @@ export async function PUT(
     if (updates.label) {
       const labelExists = watchlist.items.some(
         (item: { label: string; address: string }) =>
-          item.label.toLowerCase() === updates.label.toLowerCase() &&
+          item.label.toLowerCase() === updates.label!.toLowerCase() &&
           item.address.toLowerCase() !== oldAddress.toLowerCase()
       );
       if (labelExists) {
@@ -85,7 +91,20 @@ export async function PUT(
       );
     }
 
-    const result = await Watchlist.findOne({
+    // Validate networks to watch to make sure they're valid networks (if provided)
+    if (updates.watchedNetworks && updates.watchedNetworks.length > 0) {
+      const invalidNetwork = updates.watchedNetworks.find(
+        (network) => !NETWORKS.includes(network)
+      );
+      if (invalidNetwork) {
+        return NextResponse.json(
+          { error: `Invalid network: ${invalidNetwork}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    const result: WatchlistType | null = await Watchlist.findOne({
       userId: user._id,
       'items.address': oldAddress,
     });
@@ -97,8 +116,13 @@ export async function PUT(
     }
 
     if (updates.address && updates.address !== oldAddress) {
-      // Add new address to KV store first
-      await addAddressToKVStore(updates.address);
+      // Add new address to KV store, with the same networks as the old address or updated networks if provided
+      await addAddressToKVStore(
+        updates.address,
+        updates.watchedNetworks ??
+          result.items.find((item) => item.address === oldAddress)!
+            .watchedNetworks
+      );
 
       // Only remove old address if no one else is watching it
       const isWatched = await isAddressWatchedByOthers(
@@ -107,6 +131,14 @@ export async function PUT(
       );
       if (!isWatched) {
         await removeAddressFromKVStore(oldAddress);
+      }
+    } else if (updates.watchedNetworks) {
+      if (updates.watchedNetworks.length === 0) {
+        // If no networks are being watched, remove address from KV store
+        await removeAddressFromKVStore(oldAddress);
+      } else {
+        // If networks are being watched, update watched networks in KV store
+        await addAddressToKVStore(oldAddress, updates.watchedNetworks);
       }
     }
 
@@ -120,12 +152,16 @@ export async function PUT(
           'items.$.address': updates.address || oldAddress,
           'items.$.label': updates.label,
           'items.$.emailNotifications': updates.emailNotifications,
+          'items.$.watchedNetworks': updates.watchedNetworks,
         },
       },
       { new: true }
     ).catch(async () => {
       // If update fails, clean up the new address from KV store
-      await removeAddressFromKVStore(updates.address);
+      if (updates.address && updates.address !== oldAddress) {
+        await removeAddressFromKVStore(updates.address!);
+      }
+
       throw new Error();
     });
 

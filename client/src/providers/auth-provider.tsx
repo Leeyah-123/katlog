@@ -31,15 +31,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    fetch('/api/user/profile', {
-      headers: { 'x-wallet-address': address },
-    })
-      .then((res) => res.json())
+    const createUserIfNeeded = async () => {
+      try {
+        const profileResponse = await fetch('/api/user/profile', {
+          headers: { 'x-wallet-address': address },
+        });
+
+        if (profileResponse.status === 401) {
+          // User doesn't exist, create new user
+          const createResponse = await fetch('/api/auth/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ walletAddress: address }),
+          });
+
+          if (!createResponse.ok) {
+            console.error('Failed to create user');
+            return null;
+          }
+
+          return createResponse.json();
+        }
+
+        return profileResponse.json();
+      } catch (error) {
+        console.error('Error in user authentication:', error);
+        return null;
+      }
+    };
+
+    createUserIfNeeded()
       .then((data) => {
-        setUserId(data._id);
-        setEmail(data.email);
+        if (data) {
+          setUserId(data._id);
+          setEmail(data.email);
+        }
       })
-      .catch(() => setEmail(null));
+      .catch((error) => {
+        console.error('Error in user setup:', error);
+        setEmail(null);
+      });
   }, [connected, status, address]);
 
   const value = {

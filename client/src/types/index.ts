@@ -1,6 +1,9 @@
 import { TransactionConfirmationStatus } from '@solana/web3.js';
 
-export interface AccountAction {
+export const NETWORKS = ['Mainnet', 'Devnet', 'Testnet'] as const;
+export type Network = (typeof NETWORKS)[number];
+
+export type AccountAction = {
   signature: string;
   from: string;
   to: string;
@@ -8,19 +11,21 @@ export interface AccountAction {
   action: 'Token Transfer' | 'Sol Transfer' | 'Other';
   timestamp: string;
   success: boolean;
+  network: Network;
   status?: TransactionConfirmationStatus;
   lastStatusCheck?: number;
-}
+};
 
-export interface WatchlistItem {
+export type WatchlistItem = {
   _id: string;
   address: string;
   label: string;
+  watchedNetworks: Network[];
   emailNotifications: boolean;
   actions: AccountAction[];
-}
+};
 
-export interface ValidationResult {
+export type ValidationResult = {
   valid: boolean;
   error?: string;
-}
+};

@@ -20,8 +20,8 @@ export default async function WatchlistPage() {
           <CardHeader>
             <CardTitle>Watchlist</CardTitle>
             <p className="text-sm text-gray-300">
-              Add accounts (Devnet) to your watchlist to be notified when
-              they&apos;re involved in a transaction.
+              Add accounts to your watchlist to be notified when they&apos;re
+              involved in a transaction.
             </p>
           </CardHeader>
           <CardContent>
